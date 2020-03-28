@@ -8,4 +8,5 @@
     <string name="content_button_speed_down">Speed Down</string>
     <string name="content_button_play">Play</string>
     <string name="content_button_stop">Stop</string>
+    <string name="no_video">No Video</string>
 </resources>

@@ -15,6 +15,16 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
+        <!-- Background (no video) -->
+        <ImageView
+            android:id="@+id/image_no_video"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/no_video"
+            android:src="@drawable/no_video"
+            android:visibility="visible" />
+
         <!-- Gallery -->
         <ImageView
             android:id="@+id/button_gallery"
@@ -22,29 +32,29 @@
             android:layout_height="60dp"
             android:layout_margin="10dp"
             android:contentDescription="@string/content_button_gallery"
-            android:src="@drawable/ic_menu_archive" />
+            android:src="@drawable/archive_videos" />
 
         <!-- Backward-->
         <ImageView
             android:id="@+id/button_backward"
             android:layout_width="40dp"
-            android:layout_height="60dp"
+            android:layout_height="50dp"
             android:layout_gravity="start|center_vertical"
             android:layout_margin="10dp"
             android:contentDescription="@string/content_button_backward"
-            android:src="@drawable/backward_w"
+            android:src="@drawable/backward"
             android:visibility="invisible" />
 
         <!-- Forward -->
         <ImageView
             android:id="@+id/button_forward"
             android:layout_width="40dp"
-            android:layout_height="60dp"
+            android:layout_height="50dp"
             android:layout_gravity="end|center_vertical"
             android:layout_margin="10dp"
             android:clickable="false"
             android:contentDescription="@string/content_button_forward"
-            android:src="@drawable/forward_w"
+            android:src="@drawable/forward"
             android:visibility="invisible" />
 
         <SeekBar
@@ -54,14 +64,16 @@
             android:layout_gravity="bottom|center_horizontal"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
-            android:layout_marginBottom="60dp" />
+            android:layout_marginBottom="50dp"
+            android:visibility="invisible" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
             android:gravity="center_horizontal"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:visibility="invisible">
 
             <Space
                 android:layout_width="wrap_content"
@@ -70,8 +82,8 @@
 
             <ImageView
                 android:id="@+id/button_speed_down"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_speed_down"
@@ -84,8 +96,8 @@
 
             <ImageView
                 android:id="@+id/button_stop"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_stop"
@@ -99,8 +111,8 @@
 
             <ImageView
                 android:id="@+id/button_play"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_play"
@@ -113,8 +125,8 @@
 
             <ImageView
                 android:id="@+id/button_speed_up"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_speed_up"
