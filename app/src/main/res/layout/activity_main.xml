@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/background_dark">
+
+        <SurfaceView
+            android:id="@+id/player_surface_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- Gallery -->
+        <ImageView
+            android:id="@+id/button_gallery"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_margin="10dp"
+            android:contentDescription="@string/content_button_gallery"
+            android:src="@drawable/ic_menu_archive" />
+
+        <!-- Backward-->
+        <ImageView
+            android:id="@+id/button_backward"
+            android:layout_width="40dp"
+            android:layout_height="60dp"
+            android:layout_gravity="start|center_vertical"
+            android:layout_margin="10dp"
+            android:contentDescription="@string/content_button_backward"
+            android:src="@drawable/backward_w"
+            android:visibility="invisible" />
+
+        <!-- Forward -->
+        <ImageView
+            android:id="@+id/button_forward"
+            android:layout_width="40dp"
+            android:layout_height="60dp"
+            android:layout_gravity="end|center_vertical"
+            android:layout_margin="10dp"
+            android:clickable="false"
+            android:contentDescription="@string/content_button_forward"
+            android:src="@drawable/forward_w"
+            android:visibility="invisible" />
+
+        <SeekBar
+            android:id="@+id/seek_bar_progress"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="60dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/button_speed_down"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="10dp"
+                android:clickable="false"
+                android:contentDescription="@string/content_button_speed_down"
+                android:src="@drawable/speed_down" />
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/button_stop"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="10dp"
+                android:clickable="false"
+                android:contentDescription="@string/content_button_stop"
+                android:src="@drawable/stop" />
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/button_play"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="10dp"
+                android:clickable="false"
+                android:contentDescription="@string/content_button_play"
+                android:src="@drawable/play" />
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/button_speed_up"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="10dp"
+                android:clickable="false"
+                android:contentDescription="@string/content_button_speed_up"
+                android:src="@drawable/speed_up" />
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

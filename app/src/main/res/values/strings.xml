@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">SlowMoviePlayer</string>
+
+    <string name="content_button_gallery">Gallery</string>
+    <string name="content_button_backward">Backward</string>
+    <string name="content_button_forward">Forward</string>
+    <string name="content_button_speed_up">Speed Up</string>
+    <string name="content_button_speed_down">Speed Down</string>
+    <string name="content_button_play">Play</string>
+    <string name="content_button_stop">Stop</string>
+</resources>
