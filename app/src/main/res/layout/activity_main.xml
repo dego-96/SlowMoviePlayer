@@ -32,6 +32,7 @@
             android:layout_height="60dp"
             android:layout_margin="10dp"
             android:contentDescription="@string/content_button_gallery"
+            android:onClick="onVideoSelectButtonClicked"
             android:src="@drawable/archive_videos" />
 
         <!-- Backward-->

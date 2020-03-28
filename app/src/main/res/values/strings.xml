@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">SlowMoviePlayer</string>
 
+    <!-- layout -->
     <string name="content_button_gallery">Gallery</string>
     <string name="content_button_backward">Backward</string>
     <string name="content_button_forward">Forward</string>
@@ -9,4 +10,7 @@
     <string name="content_button_play">Play</string>
     <string name="content_button_stop">Stop</string>
     <string name="no_video">No Video</string>
+
+    <!-- Toast -->
+    <string name="toast_no_permission">動画を選択できません。</string>
 </resources>
