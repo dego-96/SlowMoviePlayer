@@ -15,15 +15,32 @@ public class VideoDecoderCallback extends MediaCodec.Callback {
 
     private MediaExtractor mExtractor;
 
+    /**
+     * VideoDecoderCallback
+     *
+     * @param aExtractor media extractor
+     */
     VideoDecoderCallback(MediaExtractor aExtractor) {
         mExtractor = aExtractor;
     }
 
+    /**
+     * onError
+     *
+     * @param aCodec     media codec
+     * @param aException codec exception
+     */
     @Override
     public void onError(@NonNull MediaCodec aCodec, @NonNull MediaCodec.CodecException aException) {
         Log.d(TAG, "onError");
     }
 
+    /**
+     * onInputBufferAvailable
+     *
+     * @param aCodec         media codec
+     * @param aInputBufferId input buffer id
+     */
     @Override
     public void onInputBufferAvailable(@NonNull MediaCodec aCodec, int aInputBufferId) {
         Log.d(TAG, "onInputBufferAvailable");
@@ -41,6 +58,13 @@ public class VideoDecoderCallback extends MediaCodec.Callback {
         }
     }
 
+    /**
+     * onOutputBufferAvailable
+     *
+     * @param aCodec          media codec
+     * @param aOutputBufferId output buffer id
+     * @param aInfo           buffer info
+     */
     @Override
     public void onOutputBufferAvailable(@NonNull MediaCodec aCodec, int aOutputBufferId, @NonNull MediaCodec.BufferInfo aInfo) {
         Log.d(TAG, "onOutputBufferAvailable");
@@ -49,6 +73,12 @@ public class VideoDecoderCallback extends MediaCodec.Callback {
         }
     }
 
+    /**
+     * onOutputFormatChanged
+     *
+     * @param aCodec  media codec
+     * @param aFormat media format
+     */
     @Override
     public void onOutputFormatChanged(@NonNull MediaCodec aCodec, @NonNull MediaFormat aFormat) {
         Log.d(TAG, "onOutputFormatChanged");

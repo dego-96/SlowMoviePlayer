@@ -16,6 +16,13 @@ class VideoPlayer {
     private MediaExtractor mExtractor;
     private MediaCodec mDecoder;
 
+    /**
+     * init
+     *
+     * @param aSurface  video play surface
+     * @param aFilePath video file path
+     * @return initialization result
+     */
     boolean init(Surface aSurface, String aFilePath) {
         Log.d(TAG, "init");
         try {
@@ -44,6 +51,9 @@ class VideoPlayer {
         return true;
     }
 
+    /**
+     * start
+     */
     void start() {
         mDecoder.start();
     }
