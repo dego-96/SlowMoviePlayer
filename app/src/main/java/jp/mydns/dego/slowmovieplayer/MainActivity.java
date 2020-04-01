@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_GALLERY = 20;
 
     private boolean mCanReadExternalStorage;
-    private String mVideoPath;
+    private String mVideoPath = null;
     private ViewStatusManager mViewStatusManager;
 
     /**
@@ -99,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
                 case REQUEST_GALLERY:
                     mVideoPath = getPathFromUri(aData);
                     Log.d(TAG, "video path :" + mVideoPath);
+                    ((PlayerSurfaceView) findViewById(R.id.player_surface_view)).setVideoPath(mVideoPath);
                     mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_VIDEO_SELECTED);
                     break;
 
