@@ -57,6 +57,7 @@
             android:clickable="false"
             android:contentDescription="@string/content_button_forward"
             android:src="@drawable/forward"
+            android:onClick="onForwardButtonClicked"
             android:visibility="invisible" />
 
         <SeekBar

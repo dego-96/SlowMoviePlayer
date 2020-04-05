@@ -88,11 +88,23 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * onStopButtonClicked
+     *
+     * @param aView button view
      */
     public void onStopButtonClicked(View aView) {
         Log.d(TAG, "onStopButtonClicked");
         mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_PAUSED);
         mPlayer.stop();
+    }
+
+    /**
+     * onForwardButtonClicked
+     *
+     * @param aView button view
+     */
+    public void onForwardButtonClicked(View aView) {
+        Log.d(TAG, "onBackwardButtonClicked");
+        mPlayer.forward();
     }
 
     /**

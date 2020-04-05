@@ -187,6 +187,27 @@ class VideoPlayer extends MediaCodec.Callback {
     }
 
     /**
+     * forward
+     */
+    void forward() {
+        Log.d(TAG, "forward");
+        if (mPlayerStatus != PLAYER_STATUS_PLAYING) {
+            mPlayerStatus = PLAYER_STATUS_PAUSED;
+            while (mQueue != null && !mQueue.isEmpty()) {
+                DecodeEvent content = mQueue.poll();
+                if (content == null) {
+                    break;
+                } else if (content.isInput()) {
+                    queueInputBuffer(mDecoder, content.getBufferId());
+                } else {
+                    releaseOutputBuffer(mDecoder, content.getBufferId());
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
      * queueInputBuffer
      *
      * @param aCodec         media codec
