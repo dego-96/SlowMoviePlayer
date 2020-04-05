@@ -100,41 +100,67 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param aRequestCode request code
      * @param aResultCode  result code
-     * @param aData        data
+     * @param aData        received data
      */
     @Override
     protected void onActivityResult(int aRequestCode, int aResultCode, Intent aData) {
         Log.d(TAG, "onActivityResult");
         super.onActivityResult(aRequestCode, aResultCode, aData);
+        switch (aRequestCode) {
+            case REQUEST_PERMISSION_READ_EXTERNAL_STORAGE:
+                requestPermission(aResultCode);
+                break;
+
+            case REQUEST_GALLERY:
+                requestGalleryResult(aResultCode, aData);
+                break;
+
+            default:
+                Log.w(TAG, "unknown request code");
+                break;
+        }
+    }
+
+    /**
+     * requestPermission
+     *
+     * @param aResultCode intent request code
+     */
+    private void requestPermission(int aResultCode) {
+        Log.d(TAG, "requestPermission");
+        if (aResultCode != Activity.RESULT_OK) {
+            return;
+        }
+        int permission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+        );
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            mCanReadExternalStorage = false;
+            Toast.makeText(
+                    this,
+                    getString(R.string.toast_no_permission),
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
+    }
+
+    /**
+     * requestGalleryResult
+     *
+     * @param aResultCode intent result code
+     * @param aData       intent received data
+     */
+    private void requestGalleryResult(int aResultCode, Intent aData) {
+        Log.d(TAG, "requestGalleryResult");
         if (aResultCode == Activity.RESULT_OK) {
-            switch (aRequestCode) {
-                case REQUEST_PERMISSION_READ_EXTERNAL_STORAGE:
-                    int permission = ContextCompat.checkSelfPermission(
-                            this,
-                            Manifest.permission.READ_EXTERNAL_STORAGE
-                    );
-                    if (permission != PackageManager.PERMISSION_GRANTED) {
-                        mCanReadExternalStorage = false;
-                        Toast.makeText(
-                                this,
-                                getString(R.string.toast_no_permission),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                    break;
-
-                case REQUEST_GALLERY:
-                    mVideoPath = getPathFromUri(aData);
-                    Log.d(TAG, "video path :" + mVideoPath);
-                    mPlayerSurfaceView.setVideoPath(mVideoPath);
-                    mPlayerSurfaceView.setVideoPlayer(mPlayer);
-                    mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_VIDEO_SELECTED);
-                    break;
-
-                default:
-                    Log.w(TAG, "unknown request code");
-                    break;
-            }
+            mVideoPath = getPathFromUri(aData);
+            Log.d(TAG, "video path :" + mVideoPath);
+        }
+        if (mVideoPath != null && !"".equals(mVideoPath)) {
+            mPlayerSurfaceView.setVideoPlayer(mPlayer);
+            mPlayerSurfaceView.setVideoPath(mVideoPath);
+            mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_VIDEO_SELECTED);
         }
     }
 

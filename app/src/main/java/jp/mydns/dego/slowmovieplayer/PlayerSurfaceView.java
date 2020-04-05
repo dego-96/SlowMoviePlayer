@@ -54,6 +54,7 @@ public class PlayerSurfaceView extends SurfaceView implements SurfaceHolder.Call
      * @param aPlayer video player
      */
     void setVideoPlayer(VideoPlayer aPlayer) {
+        Log.d(TAG, "setVideoPlayer");
         mPlayer = aPlayer;
     }
 
@@ -63,6 +64,7 @@ public class PlayerSurfaceView extends SurfaceView implements SurfaceHolder.Call
      * @param aPath video path
      */
     void setVideoPath(String aPath) {
+        Log.d(TAG, "setVideoPath");
         mVideoPath = aPath;
     }
 
@@ -87,7 +89,8 @@ public class PlayerSurfaceView extends SurfaceView implements SurfaceHolder.Call
     @Override
     public void surfaceChanged(SurfaceHolder aSurfaceHolder, int aFormat, int aWidth, int aHeight) {
         Log.d(TAG, "surfaceChanged");
-        if (null != mVideoPath && null != mPlayer) {
+        if (null != mVideoPath && !"".equals(mVideoPath) && null != mPlayer) {
+            Log.d(TAG, "video path: " + mVideoPath);
             if (mPlayer.init(aSurfaceHolder.getSurface(), mVideoPath)) {
                 mPlayer.start();
             }
