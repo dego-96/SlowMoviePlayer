@@ -82,8 +82,17 @@ public class MainActivity extends AppCompatActivity {
             mPlayer.pause();
         } else if (mViewStatusManager.getStatus() == ViewStatusManager.VIEW_STATUS_PAUSED) {
             mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_PLAYING);
-            mPlayer.restart();
+            mPlayer.start();
         }
+    }
+
+    /**
+     * onStopButtonClicked
+     */
+    public void onStopButtonClicked(View aView) {
+        Log.d(TAG, "onStopButtonClicked");
+        mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_PAUSED);
+        mPlayer.stop();
     }
 
     /**

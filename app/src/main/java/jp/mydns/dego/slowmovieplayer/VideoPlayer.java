@@ -18,10 +18,16 @@ class VideoPlayer extends MediaCodec.Callback {
     private static final String TAG = "VideoPlayer";
     private static final String MIME_VIDEO = "video/";
 
+    private static final int PLAYER_STATUS_INITIALIZED = 0;
+    private static final int PLAYER_STATUS_PLAYING = 1;
+    private static final int PLAYER_STATUS_PAUSED = 2;
+    private static final int PLAYER_STATUS_STOPED = 3;
+
     private MediaExtractor mExtractor;
     private MediaCodec mDecoder;
-    private boolean mIsFirst;
-    private boolean mIsPaused;
+    private Surface mSurface;
+    private String mFilePath;
+    private int mPlayerStatus;
     private Queue<DecodeEvent> mQueue;
 
     /**
@@ -46,7 +52,10 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "onInputBufferAvailable");
         Log.d(TAG, "Input Buffer ID: " + aInputBufferId);
 
-        if (mIsFirst || !mIsPaused) {
+//        if (mIsFirst || !mIsPaused) {
+        if (mPlayerStatus == PLAYER_STATUS_INITIALIZED ||
+                mPlayerStatus == PLAYER_STATUS_STOPED ||
+                mPlayerStatus == PLAYER_STATUS_PLAYING) {
             queueInputBuffer(aCodec, aInputBufferId);
         } else {
             mQueue.add(new DecodeEvent(true, aInputBufferId));
@@ -66,7 +75,10 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "onOutputBufferAvailable");
         Log.d(TAG, "Output Buffer ID: " + aOutputBufferId);
 
-        if (mIsFirst || !mIsPaused) {
+//        if (mIsFirst || !mIsPaused) {
+        if (mPlayerStatus == PLAYER_STATUS_INITIALIZED ||
+                mPlayerStatus == PLAYER_STATUS_STOPED ||
+                mPlayerStatus == PLAYER_STATUS_PLAYING) {
             releaseOutputBuffer(aCodec, aOutputBufferId);
         } else {
             mQueue.add(new DecodeEvent(false, aOutputBufferId));
@@ -93,9 +105,21 @@ class VideoPlayer extends MediaCodec.Callback {
      */
     boolean init(Surface aSurface, String aFilePath) {
         Log.d(TAG, "init");
+        mFilePath = aFilePath;
+        mSurface = aSurface;
+        return init();
+    }
+
+    /**
+     * init
+     *
+     * @return initialization result
+     */
+    private boolean init() {
+        Log.d(TAG, "init");
         try {
             mExtractor = new MediaExtractor();
-            mExtractor.setDataSource(aFilePath);
+            mExtractor.setDataSource(mFilePath);
             for (int index = 0; index < mExtractor.getTrackCount(); index++) {
                 MediaFormat format = mExtractor.getTrackFormat(index);
                 String mime = format.getString(MediaFormat.KEY_MIME);
@@ -104,7 +128,7 @@ class VideoPlayer extends MediaCodec.Callback {
                     mDecoder = MediaCodec.createDecoderByType(mime);
                     try {
                         Log.d(TAG, "format: " + format);
-                        mDecoder.configure(format, aSurface, null, 0);
+                        mDecoder.configure(format, mSurface, null, 0);
                     } catch (IllegalStateException e) {
                         e.printStackTrace();
                         Log.e(TAG, "codec '" + mime + "' failed configuration." + e);
@@ -116,8 +140,7 @@ class VideoPlayer extends MediaCodec.Callback {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        mIsFirst = true;
-        mIsPaused = true;
+        mPlayerStatus = PLAYER_STATUS_INITIALIZED;
         if (mQueue == null) {
             mQueue = new ArrayDeque<>();
         } else {
@@ -131,9 +154,22 @@ class VideoPlayer extends MediaCodec.Callback {
      */
     void start() {
         Log.d(TAG, "start");
-        mIsFirst = true;
-        mIsPaused = true;
-        mDecoder.start();
+        if (mPlayerStatus == PLAYER_STATUS_INITIALIZED ||
+                mPlayerStatus == PLAYER_STATUS_STOPED) {
+            mDecoder.start();
+        } else {
+            mPlayerStatus = PLAYER_STATUS_PLAYING;
+            while (mQueue != null && !mQueue.isEmpty()) {
+                DecodeEvent content = mQueue.poll();
+                if (content == null) {
+                    break;
+                } else if (content.isInput()) {
+                    queueInputBuffer(mDecoder, content.getBufferId());
+                } else {
+                    releaseOutputBuffer(mDecoder, content.getBufferId());
+                }
+            }
+        }
     }
 
     /**
@@ -141,25 +177,17 @@ class VideoPlayer extends MediaCodec.Callback {
      */
     void pause() {
         Log.d(TAG, "pause");
-        mIsPaused = true;
+        mPlayerStatus = PLAYER_STATUS_PAUSED;
     }
 
     /**
-     * restart
+     * stop
      */
-    void restart() {
-        Log.d(TAG, "restart");
-        mIsPaused = false;
-        while (mQueue != null && !mQueue.isEmpty()) {
-            DecodeEvent content = mQueue.poll();
-            if (content == null) {
-                break;
-            } else if (content.isInput()) {
-                queueInputBuffer(mDecoder, content.getBufferId());
-            } else {
-                releaseOutputBuffer(mDecoder, content.getBufferId());
-            }
-        }
+    void stop() {
+        mDecoder.stop();
+        mDecoder.release();
+        init();
+        mPlayerStatus = PLAYER_STATUS_STOPED;
     }
 
     /**
@@ -193,7 +221,9 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "releaseOutputBuffer");
         if (aOutputBufferId >= 0) {
             aCodec.releaseOutputBuffer(aOutputBufferId, true);
-            mIsFirst = false;
+            if (mPlayerStatus == PLAYER_STATUS_INITIALIZED) {
+                mPlayerStatus = PLAYER_STATUS_PAUSED;
+            }
         }
     }
 }

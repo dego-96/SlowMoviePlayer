@@ -105,6 +105,7 @@
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_stop"
+                android:onClick="onStopButtonClicked"
                 android:src="@drawable/stop"
                 android:visibility="invisible" />
 
