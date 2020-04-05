@@ -10,6 +10,8 @@ class ViewStatusManager {
 
     private static final String TAG = "ViewStatusManager";
 
+    private static int mStatus;
+
     private ImageView mNoVideoImageView;
     private ImageView mGalleryImageView;
     private ImageView mBackwardImageView;
@@ -22,7 +24,8 @@ class ViewStatusManager {
 
     static final int VIEW_STATUS_INIT = 0;
     static final int VIEW_STATUS_VIDEO_SELECTED = 1;
-//    static final int VIEW_STATUS_PLAYING = 2;
+    static final int VIEW_STATUS_PLAYING = 2;
+    static final int VIEW_STATUS_PAUSED = VIEW_STATUS_VIDEO_SELECTED;
 //    static final int VIEW_STATUS_ERROR = -1;
 
     /**
@@ -41,6 +44,7 @@ class ViewStatusManager {
         mSpeedUpImageView = aActivity.findViewById(R.id.button_speed_up);
         mSpeedDownImageView = aActivity.findViewById(R.id.button_speed_down);
         mSeekBar = aActivity.findViewById(R.id.seek_bar_progress);
+        this.setButtonState(VIEW_STATUS_INIT);
     }
 
     /**
@@ -50,6 +54,7 @@ class ViewStatusManager {
      */
     void setButtonState(int aStatus) {
         Log.d(TAG, "setButtonState(" + aStatus + ")");
+        mStatus = aStatus;
         switch (aStatus) {
             case VIEW_STATUS_INIT:
 //            case VIEW_STATUS_ERROR:
@@ -75,19 +80,28 @@ class ViewStatusManager {
                 mSpeedDownImageView.setVisibility(View.GONE);   // not support
                 mSeekBar.setVisibility(View.VISIBLE);
                 break;
-//            case VIEW_STATUS_PLAYING:
-//                mNoVideoImageView.setVisibility(View.GONE);
-//                mGalleryImageView.setVisibility(View.INVISIBLE);
-//                mBackwardImageView.setVisibility(View.GONE);
-//                mForwardImageView.setVisibility(View.INVISIBLE);
-//                mPlayImageView.setImageResource(R.drawable.pause);
-//                mPlayImageView.setVisibility(View.VISIBLE);
-//                mStopImageView.setVisibility(View.VISIBLE);
-//                mSpeedUpImageView.setVisibility(View.GONE);
-//                mSpeedDownImageView.setVisibility(View.GONE);
-//                break;
+            case VIEW_STATUS_PLAYING:
+                mNoVideoImageView.setVisibility(View.GONE);
+                mGalleryImageView.setVisibility(View.INVISIBLE);
+                mBackwardImageView.setVisibility(View.GONE);
+                mForwardImageView.setVisibility(View.INVISIBLE);
+                mPlayImageView.setImageResource(R.drawable.pause);
+                mPlayImageView.setVisibility(View.VISIBLE);
+                mStopImageView.setVisibility(View.VISIBLE);
+                mSpeedUpImageView.setVisibility(View.GONE);
+                mSpeedDownImageView.setVisibility(View.GONE);
+                break;
             default:
                 break;
         }
+    }
+
+    /**
+     * getStatus
+     *
+     * @return view status
+     */
+    int getStatus() {
+        return mStatus;
     }
 }

@@ -24,7 +24,9 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_GALLERY = 20;
 
     private boolean mCanReadExternalStorage;
+    private PlayerSurfaceView mPlayerSurfaceView;
     private String mVideoPath = null;
+    private VideoPlayer mPlayer;
     private ViewStatusManager mViewStatusManager;
 
     /**
@@ -53,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * onVideoSelectButtonClicked
      *
-     * @param aView view
+     * @param aView button view
      */
     public void onVideoSelectButtonClicked(View aView) {
         Log.d(TAG, "onVideoSelectButtonClicked");
@@ -65,6 +67,22 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(intentGallery, REQUEST_GALLERY);
         } else {
             checkExternalStorageAccess();
+        }
+    }
+
+    /**
+     * onPlayButtonClicked
+     *
+     * @param aView button view
+     */
+    public void onPlayButtonClicked(View aView) {
+        Log.d(TAG, "onPlayButtonClicked");
+        if (mViewStatusManager.getStatus() == ViewStatusManager.VIEW_STATUS_PLAYING) {
+            mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_PAUSED);
+            mPlayer.pause();
+        } else if (mViewStatusManager.getStatus() == ViewStatusManager.VIEW_STATUS_PAUSED) {
+            mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_PLAYING);
+            mPlayer.restart();
         }
     }
 
@@ -99,7 +117,8 @@ public class MainActivity extends AppCompatActivity {
                 case REQUEST_GALLERY:
                     mVideoPath = getPathFromUri(aData);
                     Log.d(TAG, "video path :" + mVideoPath);
-                    ((PlayerSurfaceView) findViewById(R.id.player_surface_view)).setVideoPath(mVideoPath);
+                    mPlayerSurfaceView.setVideoPath(mVideoPath);
+                    mPlayerSurfaceView.setVideoPlayer(mPlayer);
                     mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_VIDEO_SELECTED);
                     break;
 
@@ -116,9 +135,13 @@ public class MainActivity extends AppCompatActivity {
     private void initialize() {
         Log.d(TAG, "initialize");
         mCanReadExternalStorage = false;
+        mPlayerSurfaceView = findViewById(R.id.player_surface_view);
         mVideoPath = "";
         mViewStatusManager = new ViewStatusManager(this);
         mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_INIT);
+        if (mPlayer == null) {
+            mPlayer = new VideoPlayer();
+        }
     }
 
     /**
