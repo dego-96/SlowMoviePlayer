@@ -21,7 +21,6 @@ class VideoPlayer extends MediaCodec.Callback {
     private static final int PLAYER_STATUS_INITIALIZED = 0;
     private static final int PLAYER_STATUS_PLAYING = 1;
     private static final int PLAYER_STATUS_PAUSED = 2;
-    private static final int PLAYER_STATUS_STOPPED = 3;
 
     private MediaExtractor mExtractor;
     private MediaCodec mDecoder;
@@ -53,7 +52,6 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "Input Buffer ID: " + aInputBufferId);
 
         if (mPlayerStatus == PLAYER_STATUS_INITIALIZED ||
-                mPlayerStatus == PLAYER_STATUS_STOPPED ||
                 mPlayerStatus == PLAYER_STATUS_PLAYING) {
             queueInputBuffer(aCodec, aInputBufferId);
         } else {
@@ -75,7 +73,6 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "Output Buffer ID: " + aOutputBufferId);
 
         if (mPlayerStatus == PLAYER_STATUS_INITIALIZED ||
-                mPlayerStatus == PLAYER_STATUS_STOPPED ||
                 mPlayerStatus == PLAYER_STATUS_PLAYING) {
             releaseOutputBuffer(aCodec, aOutputBufferId);
         } else {
@@ -152,8 +149,7 @@ class VideoPlayer extends MediaCodec.Callback {
      */
     void start() {
         Log.d(TAG, "start");
-        if (mPlayerStatus == PLAYER_STATUS_INITIALIZED ||
-                mPlayerStatus == PLAYER_STATUS_STOPPED) {
+        if (mPlayerStatus == PLAYER_STATUS_INITIALIZED) {
             mDecoder.start();
         } else {
             mPlayerStatus = PLAYER_STATUS_PLAYING;
@@ -186,7 +182,8 @@ class VideoPlayer extends MediaCodec.Callback {
         mDecoder.stop();
         mDecoder.release();
         init();
-        mPlayerStatus = PLAYER_STATUS_STOPPED;
+        mPlayerStatus = PLAYER_STATUS_INITIALIZED;
+        mDecoder.start();
     }
 
     /**
