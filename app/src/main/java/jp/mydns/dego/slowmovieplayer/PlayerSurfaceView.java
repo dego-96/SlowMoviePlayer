@@ -91,9 +91,7 @@ public class PlayerSurfaceView extends SurfaceView implements SurfaceHolder.Call
         Log.d(TAG, "surfaceChanged");
         if (null != mVideoPath && !"".equals(mVideoPath) && null != mPlayer) {
             Log.d(TAG, "video path: " + mVideoPath);
-            if (mPlayer.init(aSurfaceHolder.getSurface(), mVideoPath)) {
-                mPlayer.start();
-            }
+            mPlayer.init(aSurfaceHolder.getSurface(), mVideoPath);
         }
     }
 
@@ -105,7 +103,6 @@ public class PlayerSurfaceView extends SurfaceView implements SurfaceHolder.Call
     @Override
     public void surfaceDestroyed(SurfaceHolder aSurfaceHolder) {
         Log.d(TAG, "surfaceDestroyed");
-        mPlayer = null;
     }
 
     /**

@@ -5,6 +5,7 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.util.Log;
 import android.view.Surface;
+import android.widget.SeekBar;
 
 import androidx.annotation.NonNull;
 
@@ -21,6 +22,9 @@ class VideoPlayer extends MediaCodec.Callback {
     private static final int PLAYER_STATUS_INITIALIZED = 0;
     private static final int PLAYER_STATUS_PLAYING = 1;
     private static final int PLAYER_STATUS_PAUSED = 2;
+    private static final int PLAYER_STATUS_SEEKING = 3;
+
+    private SeekBar mSeekBar;
 
     private MediaExtractor mExtractor;
     private MediaCodec mDecoder;
@@ -52,7 +56,8 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "Input Buffer ID: " + aInputBufferId);
 
         if (mPlayerStatus == PLAYER_STATUS_INITIALIZED ||
-                mPlayerStatus == PLAYER_STATUS_PLAYING) {
+                mPlayerStatus == PLAYER_STATUS_PLAYING ||
+                mPlayerStatus == PLAYER_STATUS_SEEKING) {
             queueInputBuffer(aCodec, aInputBufferId);
         } else {
             mQueue.add(new DecodeEvent(true, aInputBufferId));
@@ -73,7 +78,8 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "Output Buffer ID: " + aOutputBufferId);
 
         if (mPlayerStatus == PLAYER_STATUS_INITIALIZED ||
-                mPlayerStatus == PLAYER_STATUS_PLAYING) {
+                mPlayerStatus == PLAYER_STATUS_PLAYING ||
+                mPlayerStatus == PLAYER_STATUS_SEEKING) {
             releaseOutputBuffer(aCodec, aOutputBufferId);
         } else {
             mQueue.add(new DecodeEvent(false, aOutputBufferId));
@@ -96,21 +102,18 @@ class VideoPlayer extends MediaCodec.Callback {
      *
      * @param aSurface  video play surface
      * @param aFilePath video file path
-     * @return initialization result
      */
-    boolean init(Surface aSurface, String aFilePath) {
+    void init(Surface aSurface, String aFilePath) {
         Log.d(TAG, "init");
         mFilePath = aFilePath;
         mSurface = aSurface;
-        return init();
+        init();
     }
 
     /**
      * init
-     *
-     * @return initialization result
      */
-    private boolean init() {
+    private void init() {
         Log.d(TAG, "init");
         try {
             mExtractor = new MediaExtractor();
@@ -127,7 +130,6 @@ class VideoPlayer extends MediaCodec.Callback {
                     } catch (IllegalStateException e) {
                         e.printStackTrace();
                         Log.e(TAG, "codec '" + mime + "' failed configuration." + e);
-                        return false;
                     }
                 }
             }
@@ -141,7 +143,17 @@ class VideoPlayer extends MediaCodec.Callback {
         } else {
             mQueue.clear();
         }
-        return true;
+        mDecoder.start();
+    }
+
+    /**
+     * setSeekBar
+     *
+     * @param aSeekBar video seek bar
+     */
+    void setSeekBar(SeekBar aSeekBar) {
+        mSeekBar = aSeekBar;
+        mSeekBar.setOnSeekBarChangeListener(new VideoSeekBarChangeListener(this));
     }
 
     /**
@@ -149,20 +161,11 @@ class VideoPlayer extends MediaCodec.Callback {
      */
     void start() {
         Log.d(TAG, "start");
-        if (mPlayerStatus == PLAYER_STATUS_INITIALIZED) {
+        mPlayerStatus = PLAYER_STATUS_PLAYING;
+        if (mQueue.isEmpty()) {
             mDecoder.start();
         } else {
-            mPlayerStatus = PLAYER_STATUS_PLAYING;
-            while (mQueue != null && !mQueue.isEmpty()) {
-                DecodeEvent content = mQueue.poll();
-                if (content == null) {
-                    break;
-                } else if (content.isInput()) {
-                    queueInputBuffer(mDecoder, content.getBufferId());
-                } else {
-                    releaseOutputBuffer(mDecoder, content.getBufferId());
-                }
-            }
+            runQueuedProcess(false);
         }
     }
 
@@ -182,8 +185,6 @@ class VideoPlayer extends MediaCodec.Callback {
         mDecoder.stop();
         mDecoder.release();
         init();
-        mPlayerStatus = PLAYER_STATUS_INITIALIZED;
-        mDecoder.start();
     }
 
     /**
@@ -193,18 +194,24 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "forward");
         if (mPlayerStatus != PLAYER_STATUS_PLAYING) {
             mPlayerStatus = PLAYER_STATUS_PAUSED;
-            while (mQueue != null && !mQueue.isEmpty()) {
-                DecodeEvent content = mQueue.poll();
-                if (content == null) {
-                    break;
-                } else if (content.isInput()) {
-                    queueInputBuffer(mDecoder, content.getBufferId());
-                } else {
-                    releaseOutputBuffer(mDecoder, content.getBufferId());
-                    break;
-                }
-            }
+            runQueuedProcess(true);
         }
+    }
+
+    /**
+     * seek
+     *
+     * @param aProgress video seek time in milliseconds
+     */
+    void seek(int aProgress) {
+        Log.d(TAG, "seek");
+
+        Log.d(TAG, "seekTo : " + aProgress * 1000);
+        mQueue.clear();
+        mDecoder.flush();
+        mPlayerStatus = PLAYER_STATUS_SEEKING;
+        mExtractor.seekTo(aProgress * 1000, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
+        mDecoder.start();
     }
 
     /**
@@ -238,8 +245,34 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "releaseOutputBuffer");
         if (aOutputBufferId >= 0) {
             aCodec.releaseOutputBuffer(aOutputBufferId, true);
-            if (mPlayerStatus == PLAYER_STATUS_INITIALIZED) {
+            long sample_time = mExtractor.getSampleTime();
+            Log.d(TAG, "sample time :" + sample_time);
+            if (sample_time > 0) {
+                mSeekBar.setProgress((int) (sample_time / 1000));
+            }
+            if (mPlayerStatus == PLAYER_STATUS_INITIALIZED ||
+                    mPlayerStatus == PLAYER_STATUS_SEEKING) {
                 mPlayerStatus = PLAYER_STATUS_PAUSED;
+            }
+        }
+    }
+
+    /**
+     * runQueuedProcess
+     */
+    private void runQueuedProcess(boolean aOneFrame) {
+        Log.d(TAG, "runQueuedProcess");
+        while (mQueue != null && !mQueue.isEmpty()) {
+            DecodeEvent content = mQueue.poll();
+            if (content == null) {
+                break;
+            } else if (content.isInput()) {
+                queueInputBuffer(mDecoder, content.getBufferId());
+            } else {
+                releaseOutputBuffer(mDecoder, content.getBufferId());
+                if (aOneFrame) {
+                    break;
+                }
             }
         }
     }

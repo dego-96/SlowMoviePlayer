@@ -13,4 +13,5 @@
 
     <!-- Toast -->
     <string name="toast_no_permission">動画を選択できません。</string>
+    <string name="toast_no_video">動画を取得できませんでした。</string>
 </resources>

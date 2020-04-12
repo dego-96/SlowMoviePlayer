@@ -102,6 +102,18 @@ class ViewStatusManager {
      * @return view status
      */
     int getStatus() {
+        Log.d(TAG, "getStatus");
         return mStatus;
+    }
+
+    /**
+     * setDuration
+     *
+     * @param aDuration duration
+     */
+    void setDuration(int aDuration) {
+        Log.d(TAG, "setDuration");
+        Log.d(TAG, "video duration :" + aDuration);
+        mSeekBar.setMax(aDuration);
     }
 }

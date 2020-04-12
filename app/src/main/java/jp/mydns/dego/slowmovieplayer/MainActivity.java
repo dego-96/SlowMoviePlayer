@@ -9,12 +9,14 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
@@ -103,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
      * @param aView button view
      */
     public void onForwardButtonClicked(View aView) {
-        Log.d(TAG, "onBackwardButtonClicked");
+        Log.d(TAG, "onForwardButtonClicked");
         mPlayer.forward();
     }
 
@@ -167,12 +169,15 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "requestGalleryResult");
         if (aResultCode == Activity.RESULT_OK) {
             mVideoPath = getPathFromUri(aData);
+            mViewStatusManager.setDuration(getDurationFromUri(aData));
             Log.d(TAG, "video path :" + mVideoPath);
         }
         if (mVideoPath != null && !"".equals(mVideoPath)) {
             mPlayerSurfaceView.setVideoPlayer(mPlayer);
             mPlayerSurfaceView.setVideoPath(mVideoPath);
             mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_VIDEO_SELECTED);
+        } else {
+            Toast.makeText(getApplication(), getString(R.string.toast_no_video), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -188,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
         mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_INIT);
         if (mPlayer == null) {
             mPlayer = new VideoPlayer();
+            mPlayer.setSeekBar((SeekBar) findViewById(R.id.seek_bar_progress));
         }
     }
 
@@ -220,11 +226,13 @@ public class MainActivity extends AppCompatActivity {
     private String getPathFromUri(Intent aData) {
         Log.d(TAG, "getPathFromUri");
         if (!mCanReadExternalStorage) {
+            Log.e(TAG, "can not read external storage");
             return null;
         }
 
         Uri uri = aData.getData();
         if (uri == null) {
+            Log.e(TAG, "uri is null");
             return null;
         }
 
@@ -247,8 +255,27 @@ public class MainActivity extends AppCompatActivity {
         if (cursor != null && cursor.moveToFirst()) {
             path = cursor.getString(cursor.getColumnIndex(column[0]));
             cursor.close();
+        } else {
+            Log.e(TAG, "cursor is null");
         }
         Log.d(TAG, "path: " + path);
         return path;
+    }
+
+    /**
+     * getDurationFromUri
+     *
+     * @param aData data
+     * @return video duration
+     */
+    private int getDurationFromUri(Intent aData) {
+        Log.d(TAG, "getDurationFromUri");
+
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(getApplicationContext(), aData.getData());
+        String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        Log.d("MediaMetadataRetriever", "再生時間(ms):" + duration);
+
+        return Integer.parseInt(duration);
     }
 }
