@@ -17,7 +17,12 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
     private String mVideoPath = null;
     private VideoPlayer mPlayer;
     private ViewStatusManager mViewStatusManager;
+    private TextView mCurrentTimeTextView;
+    private TextView mRemainTimeTextView;
+    private int mDuration;
 
     /**
      * onCreate
@@ -136,6 +144,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * setCurrentTime
+     *
+     * @param aProgress current time in milliseconds
+     */
+    public void setCurrentTime(int aProgress) {
+        Log.d(TAG, "setCurrentTime");
+        SimpleDateFormat format = new SimpleDateFormat("mm:ss:SSS", Locale.JAPAN);
+        mCurrentTimeTextView.setText(format.format(new Date(aProgress)));
+    }
+
+    public void setRemainTime(int aProgress) {
+        if (aProgress < mDuration) {
+            SimpleDateFormat format = new SimpleDateFormat("mm:ss:SSS", Locale.JAPAN);
+            mRemainTimeTextView.setText(format.format(new Date(mDuration - aProgress)));
+        } else {
+            mRemainTimeTextView.setText(getString(R.string.remain_time_init));
+        }
+    }
+
+    /**
      * requestPermission
      *
      * @param aResultCode intent request code
@@ -169,7 +197,8 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "requestGalleryResult");
         if (aResultCode == Activity.RESULT_OK) {
             mVideoPath = getPathFromUri(aData);
-            mViewStatusManager.setDuration(getDurationFromUri(aData));
+            mDuration = getDurationFromUri(aData);
+            mViewStatusManager.setDuration(mDuration);
             Log.d(TAG, "video path :" + mVideoPath);
         }
         if (mVideoPath != null && !"".equals(mVideoPath)) {
@@ -192,9 +221,12 @@ public class MainActivity extends AppCompatActivity {
         mViewStatusManager = new ViewStatusManager(this);
         mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_INIT);
         if (mPlayer == null) {
-            mPlayer = new VideoPlayer();
+            mPlayer = new VideoPlayer(this);
             mPlayer.setSeekBar((SeekBar) findViewById(R.id.seek_bar_progress));
         }
+        mDuration = 0;
+        mCurrentTimeTextView = findViewById(R.id.text_view_current_time);
+        mRemainTimeTextView = findViewById(R.id.text_view_remain_time);
     }
 
     /**

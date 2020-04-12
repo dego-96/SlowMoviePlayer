@@ -24,6 +24,7 @@ class VideoPlayer extends MediaCodec.Callback {
     private static final int PLAYER_STATUS_PAUSED = 2;
     private static final int PLAYER_STATUS_SEEKING = 3;
 
+    private MainActivity mActivity;
     private SeekBar mSeekBar;
 
     private MediaExtractor mExtractor;
@@ -32,6 +33,10 @@ class VideoPlayer extends MediaCodec.Callback {
     private String mFilePath;
     private int mPlayerStatus;
     private Queue<DecodeEvent> mQueue;
+
+    VideoPlayer(MainActivity aActivity) {
+        mActivity = aActivity;
+    }
 
     /**
      * onError
@@ -248,7 +253,10 @@ class VideoPlayer extends MediaCodec.Callback {
             long sample_time = mExtractor.getSampleTime();
             Log.d(TAG, "sample time :" + sample_time);
             if (sample_time > 0) {
-                mSeekBar.setProgress((int) (sample_time / 1000));
+                int progress = (int) (sample_time / 1000);
+                mSeekBar.setProgress(progress);
+                mActivity.setCurrentTime(progress);
+                mActivity.setRemainTime(progress);
             }
             if (mPlayerStatus == PLAYER_STATUS_INITIALIZED ||
                     mPlayerStatus == PLAYER_STATUS_SEEKING) {

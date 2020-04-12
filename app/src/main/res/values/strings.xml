@@ -10,6 +10,8 @@
     <string name="content_button_play">Play</string>
     <string name="content_button_stop">Stop</string>
     <string name="no_video">No Video</string>
+    <string name="current_time_init">00:00:000</string>
+    <string name="remain_time_init">--:--:---</string>
 
     <!-- Toast -->
     <string name="toast_no_permission">動画を選択できません。</string>
