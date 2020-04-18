@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 class ViewStatusManager {
 
@@ -21,6 +22,8 @@ class ViewStatusManager {
     private ImageView mSpeedUpImageView;
     private ImageView mSpeedDownImageView;
     private SeekBar mSeekBar;
+    private TextView mCurrentTimeTextView;
+    private TextView mRemainTimeTextView;
 
     static final int VIEW_STATUS_INIT = 0;
     static final int VIEW_STATUS_VIDEO_SELECTED = 1;
@@ -44,6 +47,8 @@ class ViewStatusManager {
         mSpeedUpImageView = aActivity.findViewById(R.id.button_speed_up);
         mSpeedDownImageView = aActivity.findViewById(R.id.button_speed_down);
         mSeekBar = aActivity.findViewById(R.id.seek_bar_progress);
+        mCurrentTimeTextView = aActivity.findViewById(R.id.text_view_current_time);
+        mRemainTimeTextView = aActivity.findViewById(R.id.text_view_remain_time);
         this.setButtonState(VIEW_STATUS_INIT);
     }
 
@@ -67,6 +72,8 @@ class ViewStatusManager {
                 mSpeedUpImageView.setVisibility(View.GONE);     // not support
                 mSpeedDownImageView.setVisibility(View.GONE);   // not support
                 mSeekBar.setVisibility(View.INVISIBLE);
+                mCurrentTimeTextView.setVisibility(View.INVISIBLE);
+                mRemainTimeTextView.setVisibility(View.INVISIBLE);
                 break;
             case VIEW_STATUS_VIDEO_SELECTED:
                 mNoVideoImageView.setVisibility(View.GONE);
@@ -79,6 +86,8 @@ class ViewStatusManager {
                 mSpeedUpImageView.setVisibility(View.GONE);     // not support
                 mSpeedDownImageView.setVisibility(View.GONE);   // not support
                 mSeekBar.setVisibility(View.VISIBLE);
+                mCurrentTimeTextView.setVisibility(View.VISIBLE);
+                mRemainTimeTextView.setVisibility(View.VISIBLE);
                 break;
             case VIEW_STATUS_PLAYING:
                 mNoVideoImageView.setVisibility(View.GONE);
@@ -90,6 +99,9 @@ class ViewStatusManager {
                 mStopImageView.setVisibility(View.VISIBLE);
                 mSpeedUpImageView.setVisibility(View.GONE);
                 mSpeedDownImageView.setVisibility(View.GONE);
+                mSeekBar.setVisibility(View.VISIBLE);
+                mCurrentTimeTextView.setVisibility(View.VISIBLE);
+                mRemainTimeTextView.setVisibility(View.VISIBLE);
                 break;
             default:
                 break;
