@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         android:background="@android:color/background_dark">
 
-        <jp.mydns.dego.slowmovieplayer.PlayerSurfaceView
+        <SurfaceView
             android:id="@+id/player_surface_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -178,7 +178,8 @@
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_speed_up"
-                android:src="@drawable/speed_up" />
+                android:src="@drawable/speed_up"
+                android:visibility="invisible" />
 
             <Space
                 android:layout_width="wrap_content"

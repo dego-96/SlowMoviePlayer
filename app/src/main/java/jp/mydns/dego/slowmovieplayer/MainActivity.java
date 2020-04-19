@@ -9,20 +9,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,13 +24,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_GALLERY = 20;
 
     private boolean mCanReadExternalStorage;
-    private PlayerSurfaceView mPlayerSurfaceView;
-    private String mVideoPath = null;
-    private VideoPlayer mPlayer;
-    private ViewStatusManager mViewStatusManager;
-    private TextView mCurrentTimeTextView;
-    private TextView mRemainTimeTextView;
-    private int mDuration;
+
+    private VideoController mVideoController;
 
     /**
      * onCreate
@@ -87,13 +75,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onPlayButtonClicked(View aView) {
         Log.d(TAG, "onPlayButtonClicked");
-        if (mViewStatusManager.getStatus() == ViewStatusManager.VIEW_STATUS_PLAYING) {
-            mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_PAUSED);
-            mPlayer.pause();
-        } else if (mViewStatusManager.getStatus() == ViewStatusManager.VIEW_STATUS_PAUSED) {
-            mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_PLAYING);
-            mPlayer.start();
-        }
+        mVideoController.videoPlay();
     }
 
     /**
@@ -103,8 +85,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onStopButtonClicked(View aView) {
         Log.d(TAG, "onStopButtonClicked");
-        mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_PAUSED);
-        mPlayer.stop();
+        mVideoController.videoStop();
     }
 
     /**
@@ -114,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onForwardButtonClicked(View aView) {
         Log.d(TAG, "onForwardButtonClicked");
-        mPlayer.forward();
+        mVideoController.videoForward();
     }
 
     /**
@@ -140,26 +121,6 @@ public class MainActivity extends AppCompatActivity {
             default:
                 Log.w(TAG, "unknown request code");
                 break;
-        }
-    }
-
-    /**
-     * setCurrentTime
-     *
-     * @param aProgress current time in milliseconds
-     */
-    public void setCurrentTime(int aProgress) {
-        Log.d(TAG, "setCurrentTime");
-        SimpleDateFormat format = new SimpleDateFormat("mm:ss:SSS", Locale.JAPAN);
-        mCurrentTimeTextView.setText(format.format(new Date(aProgress)));
-    }
-
-    public void setRemainTime(int aProgress) {
-        if (aProgress < mDuration) {
-            SimpleDateFormat format = new SimpleDateFormat("mm:ss:SSS", Locale.JAPAN);
-            mRemainTimeTextView.setText(format.format(new Date(mDuration - aProgress)));
-        } else {
-            mRemainTimeTextView.setText(getString(R.string.remain_time_init));
         }
     }
 
@@ -195,17 +156,14 @@ public class MainActivity extends AppCompatActivity {
      */
     private void requestGalleryResult(int aResultCode, Intent aData) {
         Log.d(TAG, "requestGalleryResult");
+        String video_path = "";
         if (aResultCode == Activity.RESULT_OK) {
-            mVideoPath = getPathFromUri(aData);
-            mDuration = getDurationFromUri(aData);
-            mViewStatusManager.setDuration(mDuration);
-            Log.d(TAG, "video path :" + mVideoPath);
+            video_path = getPathFromUri(aData);
+            mVideoController.setVideoPath(video_path);
+            mVideoController.setVisibility(VideoPlayer.PLAYER_STATUS.PAUSED);
+            Log.d(TAG, "video path :" + video_path);
         }
-        if (mVideoPath != null && !"".equals(mVideoPath)) {
-            mPlayerSurfaceView.setVideoPlayer(mPlayer);
-            mPlayerSurfaceView.setVideoPath(mVideoPath);
-            mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_VIDEO_SELECTED);
-        } else {
+        if ("".equals(video_path)) {
             Toast.makeText(getApplication(), getString(R.string.toast_no_video), Toast.LENGTH_SHORT).show();
         }
     }
@@ -215,18 +173,8 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initialize() {
         Log.d(TAG, "initialize");
+        mVideoController = new VideoController(this);
         mCanReadExternalStorage = false;
-        mPlayerSurfaceView = findViewById(R.id.player_surface_view);
-        mVideoPath = "";
-        mViewStatusManager = new ViewStatusManager(this);
-        mViewStatusManager.setButtonState(ViewStatusManager.VIEW_STATUS_INIT);
-        if (mPlayer == null) {
-            mPlayer = new VideoPlayer(this);
-            mPlayer.setSeekBar((SeekBar) findViewById(R.id.seek_bar_progress));
-        }
-        mDuration = 0;
-        mCurrentTimeTextView = findViewById(R.id.text_view_current_time);
-        mRemainTimeTextView = findViewById(R.id.text_view_remain_time);
     }
 
     /**
@@ -292,22 +240,5 @@ public class MainActivity extends AppCompatActivity {
         }
         Log.d(TAG, "path: " + path);
         return path;
-    }
-
-    /**
-     * getDurationFromUri
-     *
-     * @param aData data
-     * @return video duration
-     */
-    private int getDurationFromUri(Intent aData) {
-        Log.d(TAG, "getDurationFromUri");
-
-        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(getApplicationContext(), aData.getData());
-        String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        Log.d("MediaMetadataRetriever", "再生時間(ms):" + duration);
-
-        return Integer.parseInt(duration);
     }
 }
