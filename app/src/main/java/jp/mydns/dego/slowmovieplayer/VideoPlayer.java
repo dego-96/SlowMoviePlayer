@@ -17,6 +17,7 @@ class VideoPlayer extends MediaCodec.Callback {
 
     private static final String TAG = "VideoPlayer";
     private static final String MIME_VIDEO = "video/";
+    private static final long SEEK_RENDER_TIMEOUT = 50;
 
     /* player status */
     enum PLAYER_STATUS {
@@ -26,8 +27,8 @@ class VideoPlayer extends MediaCodec.Callback {
         STOPPED,
         FORWARD,
         BACKWARD,
-        SEEKING,
-        SEEK_FINISHED
+        SEEK_RENDER_START,
+        SEEK_RENDER_FINISH
     }
 
     private PLAYER_STATUS mPlayerStatus;
@@ -38,6 +39,7 @@ class VideoPlayer extends MediaCodec.Callback {
     private String mFilePath;
     private Queue<DecodeEvent> mQueue;
     private boolean mPlayToEnd;
+    private long mLastSeekTime;
 
     private OnVideoStatusChangeListener mVideoListener;
 
@@ -65,7 +67,8 @@ class VideoPlayer extends MediaCodec.Callback {
 
         if (mPlayerStatus == PLAYER_STATUS.INITIALIZED ||
                 mPlayerStatus == PLAYER_STATUS.PLAYING ||
-                mPlayerStatus == PLAYER_STATUS.STOPPED) {
+                mPlayerStatus == PLAYER_STATUS.STOPPED ||
+                mPlayerStatus == PLAYER_STATUS.SEEK_RENDER_START) {
             queueInputBuffer(aCodec, aInputBufferId);
         } else {
             mQueue.add(new DecodeEvent(true, aInputBufferId));
@@ -87,8 +90,11 @@ class VideoPlayer extends MediaCodec.Callback {
 
         if (mPlayerStatus == PLAYER_STATUS.INITIALIZED ||
                 mPlayerStatus == PLAYER_STATUS.PLAYING ||
-                mPlayerStatus == PLAYER_STATUS.STOPPED) {
-            releaseOutputBuffer(aCodec, aOutputBufferId);
+                mPlayerStatus == PLAYER_STATUS.STOPPED ||
+                mPlayerStatus == PLAYER_STATUS.SEEK_RENDER_START) {
+            if (aOutputBufferId >= 0) {
+                releaseOutputBuffer(aCodec, aOutputBufferId);
+            }
         } else {
             mQueue.add(new DecodeEvent(false, aOutputBufferId));
         }
@@ -164,6 +170,7 @@ class VideoPlayer extends MediaCodec.Callback {
         } else {
             mQueue.clear();
         }
+        mVideoListener.onPlayerStatusChanged(PLAYER_STATUS.PAUSED);
         mDecoder.start();
     }
 
@@ -173,6 +180,7 @@ class VideoPlayer extends MediaCodec.Callback {
     void play() {
         Log.d(TAG, "play");
         mPlayerStatus = PLAYER_STATUS.PLAYING;
+        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
         if (mPlayToEnd) {
             mPlayToEnd = false;
             mDecoder.stop();
@@ -191,6 +199,7 @@ class VideoPlayer extends MediaCodec.Callback {
     void pause() {
         Log.d(TAG, "pause");
         mPlayerStatus = PLAYER_STATUS.PAUSED;
+        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
     }
 
     /**
@@ -199,6 +208,7 @@ class VideoPlayer extends MediaCodec.Callback {
     void stop() {
         Log.d(TAG, "stop");
         mPlayerStatus = PLAYER_STATUS.STOPPED;
+        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
         mDecoder.stop();
         mDecoder.release();
         init();
@@ -209,6 +219,8 @@ class VideoPlayer extends MediaCodec.Callback {
      */
     void forward() {
         Log.d(TAG, "forward");
+        mPlayerStatus = PLAYER_STATUS.FORWARD;
+        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
         if (mPlayerStatus != PLAYER_STATUS.PLAYING) {
             mPlayerStatus = PLAYER_STATUS.PAUSED;
             runQueuedProcess(true);
@@ -221,12 +233,19 @@ class VideoPlayer extends MediaCodec.Callback {
      * @param aProgress video seek time in milliseconds
      */
     void seek(int aProgress) {
-        Log.d(TAG, "seek");
+        Log.d(TAG, "seek" + "  (from " + mPlayerStatus.name() + ")");
+
+        if (mPlayerStatus == PLAYER_STATUS.SEEK_RENDER_START ||
+                System.currentTimeMillis() - mLastSeekTime < SEEK_RENDER_TIMEOUT) {
+            Log.d(TAG, "nothing to do.");
+            return;
+        }
+        mPlayerStatus = PLAYER_STATUS.SEEK_RENDER_START;
+        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
 
         Log.d(TAG, "seekTo : " + aProgress * 1000);
         mQueue.clear();
         mDecoder.flush();
-        mPlayerStatus = PLAYER_STATUS.SEEKING;
         mExtractor.seekTo(aProgress * 1000, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
         mDecoder.start();
     }
@@ -271,23 +290,40 @@ class VideoPlayer extends MediaCodec.Callback {
      */
     private void releaseOutputBuffer(@NonNull MediaCodec aCodec, int aOutputBufferId) {
         Log.d(TAG, "releaseOutputBuffer");
-        if (aOutputBufferId >= 0) {
-            aCodec.releaseOutputBuffer(aOutputBufferId, true);
-            long sample_time = mExtractor.getSampleTime();
-            Log.d(TAG, "sample time :" + sample_time);
-            if (sample_time > 0) {
-                int progress = (int) (sample_time / 1000);
-                mVideoListener.onProgressChanged(progress);
-            }
-            if (mPlayerStatus == PLAYER_STATUS.INITIALIZED ||
-                    mPlayerStatus == PLAYER_STATUS.STOPPED) {
-                // stop playing video by rendering one frame.
+        long sample_time;
+        switch (mPlayerStatus) {
+            case INITIALIZED:
+            case STOPPED:
                 mPlayerStatus = PLAYER_STATUS.PAUSED;
-            }
-            if (mPlayToEnd) {
-                mPlayerStatus = PLAYER_STATUS.PAUSED;
-                mVideoListener.onPlayToEnd();
-            }
+            case PAUSED:
+            case PLAYING:
+            case FORWARD:
+            case BACKWARD:
+                aCodec.releaseOutputBuffer(aOutputBufferId, true);
+                sample_time = mExtractor.getSampleTime();
+                Log.d(TAG, "sample time :" + sample_time);
+                if (sample_time > 0) {
+                    int progress = (int) (sample_time / 1000);
+                    mVideoListener.onProgressChanged(progress);
+                }
+                break;
+            case SEEK_RENDER_START:
+                mPlayerStatus = PLAYER_STATUS.SEEK_RENDER_FINISH;
+                mLastSeekTime = System.currentTimeMillis();
+                aCodec.releaseOutputBuffer(aOutputBufferId, true);
+                sample_time = mExtractor.getSampleTime();
+                Log.d(TAG, "sample time :" + sample_time);
+                break;
+            case SEEK_RENDER_FINISH:
+                return;
+            default:
+                Log.e(TAG, "video player status error");
+                break;
+        }
+
+        if (mPlayToEnd) {
+            mPlayerStatus = PLAYER_STATUS.PAUSED;
+            mVideoListener.onPlayToEnd();
         }
     }
 

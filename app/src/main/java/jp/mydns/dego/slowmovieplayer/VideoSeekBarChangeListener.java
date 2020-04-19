@@ -29,9 +29,9 @@ public class VideoSeekBarChangeListener implements SeekBar.OnSeekBarChangeListen
     public void onProgressChanged(SeekBar aSeekBar, int aProgress, boolean aFromUser) {
         Log.d(TAG, "onProgressChanged");
         Log.d(TAG, "progress : " + aProgress);
-//        if (aFromUser) {
-//            mPlayer.seek(aProgress);
-//        }
+        if (aFromUser) {
+            mPlayer.seek(aProgress);
+        }
     }
 
     /**

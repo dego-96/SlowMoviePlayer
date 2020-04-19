@@ -47,6 +47,13 @@ class VideoController {
         mVideoPath = null;
         mPlayer = new VideoPlayer();
         mPlayer.setVideoStatusChangeListener(new OnVideoStatusChangeListener() {
+
+            @Override
+            public void onPlayerStatusChanged(VideoPlayer.PLAYER_STATUS aStatus) {
+                Log.d(TAG, "onProgressChanged( " + aStatus.name() + ")");
+                setVisibility(aStatus);
+            }
+
             @Override
             public void onProgressChanged(int aProgress) {
                 Log.d(TAG, "onProgressChanged( " + aProgress + " )");
@@ -152,8 +159,8 @@ class VideoController {
             case STOPPED:
             case FORWARD:
             case BACKWARD:
-            case SEEKING:
-            case SEEK_FINISHED:
+            case SEEK_RENDER_START:
+            case SEEK_RENDER_FINISH:
                 mNoVideoImageView.setVisibility(View.GONE);
                 mGalleryImageView.setVisibility(View.VISIBLE);
                 mBackwardImageView.setVisibility(View.GONE);    // no support
@@ -189,10 +196,9 @@ class VideoController {
         Log.d(TAG, "videoPlay");
         if (mPlayer != null) {
             if (mPlayer.getPlayerStatus() == VideoPlayer.PLAYER_STATUS.PLAYING) {
-                this.setVisibility(VideoPlayer.PLAYER_STATUS.PAUSED);
                 mPlayer.pause();
-            } else if (mPlayer.getPlayerStatus() == VideoPlayer.PLAYER_STATUS.PAUSED) {
-                this.setVisibility(VideoPlayer.PLAYER_STATUS.PLAYING);
+            } else if (mPlayer.getPlayerStatus() == VideoPlayer.PLAYER_STATUS.PAUSED ||
+                    mPlayer.getPlayerStatus() == VideoPlayer.PLAYER_STATUS.SEEK_RENDER_FINISH) {
                 mPlayer.play();
             }
         }
@@ -204,7 +210,6 @@ class VideoController {
     void videoStop() {
         Log.d(TAG, "videoStop");
         if (mPlayer != null) {
-            this.setVisibility(VideoPlayer.PLAYER_STATUS.STOPPED);
             mPlayer.stop();
         }
     }
@@ -215,7 +220,6 @@ class VideoController {
     void videoForward() {
         Log.d(TAG, "videoForward");
         if (mPlayer != null) {
-            this.setVisibility(VideoPlayer.PLAYER_STATUS.FORWARD);
             mPlayer.forward();
         }
     }
