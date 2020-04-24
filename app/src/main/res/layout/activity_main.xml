@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         android:background="@android:color/background_dark">
 
-        <SurfaceView
+        <jp.mydns.dego.slowmovieplayer.VideoSurfaceView
             android:id="@+id/player_surface_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -61,6 +61,7 @@
             android:visibility="invisible" />
 
         <LinearLayout
+            android:id="@+id/layout_seek_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
@@ -108,6 +109,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/layout_control_buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"

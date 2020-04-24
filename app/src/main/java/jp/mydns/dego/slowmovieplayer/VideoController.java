@@ -1,29 +1,36 @@
 package jp.mydns.dego.slowmovieplayer;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 class VideoController {
 
     private static final String TAG = "VideoController";
+    private static final int ANIMATOR_DURATION = 300;
+    private static final int TOUCH_DETECT_TIME_MAX = 200;
 
     private Activity mActivity;
     private VideoPlayer mPlayer;
-    private String mVideoPath;
 
     private final static SimpleDateFormat sDateFormat = new SimpleDateFormat("mm:ss:SSS", Locale.JAPAN);
 
     /* Views */
+    private VideoSurfaceView mSurfaceView;
     private ImageView mNoVideoImageView;
     private ImageView mGalleryImageView;
     private ImageView mBackwardImageView;
@@ -36,6 +43,13 @@ class VideoController {
     private TextView mCurrentTimeTextView;
     private TextView mRemainTimeTextView;
 
+    /* Layout */
+    private LinearLayout mControlButtonsLayout;
+    private LinearLayout mSeekBarLayout;
+
+    private boolean mFrameOuted;
+    private long mTouchDownTime;
+
     /**
      * VideoController
      *
@@ -44,7 +58,6 @@ class VideoController {
     VideoController(final Activity aActivity) {
         Log.d(TAG, "VideoController");
         mActivity = aActivity;
-        mVideoPath = null;
         mPlayer = new VideoPlayer();
         mPlayer.setVideoStatusChangeListener(new OnVideoStatusChangeListener() {
 
@@ -82,27 +95,37 @@ class VideoController {
             }
         });
 
-        SurfaceView surfaceView = aActivity.findViewById(R.id.player_surface_view);
-        surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+        mSurfaceView = aActivity.findViewById(R.id.player_surface_view);
+        mSurfaceView.setPlayer(mPlayer);
+        mSurfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                Log.d(TAG, "surfaceCreated");
-            }
+            public boolean onTouch(View aView, MotionEvent aMotionEvent) {
+                Log.d(TAG, "onTouch");
 
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                Log.d(TAG, "surfaceChanged");
-                if (null != mVideoPath && !"".equals(mVideoPath) && null != mPlayer) {
-                    Log.d(TAG, "video path: " + mVideoPath);
-                    mPlayer.init(holder.getSurface(), mVideoPath);
+                switch (aMotionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        Log.d(TAG, "ACTION_DOWN");
+                        mTouchDownTime = System.currentTimeMillis();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        Log.d(TAG, "ACTION_MOVE");
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        Log.d(TAG, "ACTION_UP");
+                        aView.performClick();
+                        if (mPlayer != null &&
+                                mPlayer.getPlayerStatus() != null &&
+                                mPlayer.getPlayerStatus() != VideoPlayer.PLAYER_STATUS.INITIALIZED &&
+                                System.currentTimeMillis() - mTouchDownTime < TOUCH_DETECT_TIME_MAX) {
+                            Log.d(TAG, "player status :" + mPlayer.getPlayerStatus().name());
+                            fullScreenAnimationStart();
+                        }
+                        break;
                 }
-            }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                Log.d(TAG, "surfaceDestroyed");
+                return true;
             }
         });
+
         mNoVideoImageView = aActivity.findViewById(R.id.image_no_video);
         mGalleryImageView = aActivity.findViewById(R.id.button_gallery);
         mBackwardImageView = aActivity.findViewById(R.id.button_backward);
@@ -115,7 +138,12 @@ class VideoController {
         mCurrentTimeTextView = aActivity.findViewById(R.id.text_view_current_time);
         mRemainTimeTextView = aActivity.findViewById(R.id.text_view_remain_time);
 
+        mControlButtonsLayout = aActivity.findViewById(R.id.layout_control_buttons);
+        mSeekBarLayout = aActivity.findViewById(R.id.layout_seek_bar);
+
         mSeekBar.setOnSeekBarChangeListener(new VideoSeekBarChangeListener(mPlayer));
+
+        mFrameOuted = false;
 
         this.setVisibility(VideoPlayer.PLAYER_STATUS.INITIALIZED);
     }
@@ -186,7 +214,7 @@ class VideoController {
      * @param aPath video file path
      */
     void setVideoPath(String aPath) {
-        mVideoPath = aPath;
+        mSurfaceView.setVideoPath(aPath);
     }
 
     /**
@@ -222,5 +250,48 @@ class VideoController {
         if (mPlayer != null) {
             mPlayer.forward();
         }
+    }
+
+    /**
+     * fullScreenAnimationStart
+     */
+    private void fullScreenAnimationStart() {
+        Log.d(TAG, "fullScreenAnimationStart");
+
+        float toX, fromX, toY, fromY;
+        List<Animator> animatorList = new ArrayList<>();
+
+        if (mFrameOuted) {
+            // animation (frame in)
+            fromX = 180.0f;
+            toX = 0.0f;
+            fromY = 180.0f;
+            toY = 0.0f;
+        } else {
+            // animation (frame out)
+            fromX = 0.0f;
+            toX = 180.0f;
+            fromY = 0.0f;
+            toY = 180.0f;
+        }
+        mFrameOuted = !mFrameOuted;
+
+        ObjectAnimator animatorTrans_Buttons = ObjectAnimator.ofFloat(mControlButtonsLayout, "translationY", fromY, toY);
+        ObjectAnimator animatorTrans_SeekBar = ObjectAnimator.ofFloat(mSeekBarLayout, "translationY", fromY, toY);
+        ObjectAnimator animatorTrans_Forward = ObjectAnimator.ofFloat(mForwardImageView, "translationX", fromX, toX);
+        ObjectAnimator animatorTrans_Gallery = ObjectAnimator.ofFloat(mGalleryImageView, "translationX", -1.0f * fromX, -1.0f * toX);
+
+        animatorTrans_Buttons.setDuration(ANIMATOR_DURATION);
+        animatorTrans_SeekBar.setDuration(ANIMATOR_DURATION);
+        animatorTrans_Forward.setDuration(ANIMATOR_DURATION);
+        animatorTrans_Gallery.setDuration(ANIMATOR_DURATION);
+        animatorList.add(animatorTrans_Buttons);
+        animatorList.add(animatorTrans_SeekBar);
+        animatorList.add(animatorTrans_Forward);
+        animatorList.add(animatorTrans_Gallery);
+
+        AnimatorSet animatorSet = new AnimatorSet();
+        animatorSet.playTogether(animatorList);
+        animatorSet.start();
     }
 }
