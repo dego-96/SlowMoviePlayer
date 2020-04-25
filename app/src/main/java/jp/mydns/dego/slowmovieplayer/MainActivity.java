@@ -99,6 +99,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * onBackwardButtonClicked
+     *
+     * @param aView button view
+     */
+    public void onBackwardButtonClicked(View aView) {
+        Log.d(TAG, "onBackwardButtonClicked");
+        mVideoController.videoBackward();
+    }
+
+    /**
      * onActivityResult
      *
      * @param aRequestCode request code

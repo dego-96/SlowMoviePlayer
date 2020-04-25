@@ -40,6 +40,8 @@ class VideoPlayer extends MediaCodec.Callback {
     private Queue<DecodeEvent> mQueue;
     private boolean mPlayToEnd;
     private long mLastSeekTime;
+    private long mLastRenderTime;
+    private int mFrameRate;
 
     private OnVideoStatusChangeListener mVideoListener;
 
@@ -68,7 +70,8 @@ class VideoPlayer extends MediaCodec.Callback {
         if (mPlayerStatus == PLAYER_STATUS.INITIALIZED ||
                 mPlayerStatus == PLAYER_STATUS.PLAYING ||
                 mPlayerStatus == PLAYER_STATUS.STOPPED ||
-                mPlayerStatus == PLAYER_STATUS.SEEK_RENDER_START) {
+                mPlayerStatus == PLAYER_STATUS.SEEK_RENDER_START ||
+                mPlayerStatus == PLAYER_STATUS.BACKWARD) {
             queueInputBuffer(aCodec, aInputBufferId);
         } else {
             mQueue.add(new DecodeEvent(true, aInputBufferId));
@@ -91,7 +94,8 @@ class VideoPlayer extends MediaCodec.Callback {
         if (mPlayerStatus == PLAYER_STATUS.INITIALIZED ||
                 mPlayerStatus == PLAYER_STATUS.PLAYING ||
                 mPlayerStatus == PLAYER_STATUS.STOPPED ||
-                mPlayerStatus == PLAYER_STATUS.SEEK_RENDER_START) {
+                mPlayerStatus == PLAYER_STATUS.SEEK_RENDER_START ||
+                mPlayerStatus == PLAYER_STATUS.BACKWARD) {
             if (aOutputBufferId >= 0) {
                 releaseOutputBuffer(aCodec, aOutputBufferId);
             }
@@ -143,14 +147,20 @@ class VideoPlayer extends MediaCodec.Callback {
         try {
             mExtractor = new MediaExtractor();
             mExtractor.setDataSource(mFilePath);
+
             for (int index = 0; index < mExtractor.getTrackCount(); index++) {
                 MediaFormat format = mExtractor.getTrackFormat(index);
-                long duration = format.getLong(MediaFormat.KEY_DURATION);
-                mVideoListener.onDurationChanged((int) (duration / 1000));
                 String mime = format.getString(MediaFormat.KEY_MIME);
                 if (mime != null && mime.startsWith(MIME_VIDEO)) {
                     mExtractor.selectTrack(index);
                     mDecoder = MediaCodec.createDecoderByType(mime);
+
+                    long duration = format.getLong(MediaFormat.KEY_DURATION);
+                    mVideoListener.onDurationChanged((int) (duration / 1000));
+
+                    mFrameRate = format.getInteger(MediaFormat.KEY_FRAME_RATE);
+                    Log.d(TAG, "frame rate :" + mFrameRate);
+
                     try {
                         Log.d(TAG, "format: " + format);
                         mDecoder.configure(format, mSurface, null, 0);
@@ -228,6 +238,24 @@ class VideoPlayer extends MediaCodec.Callback {
     }
 
     /**
+     * backward
+     */
+    void backward() {
+        Log.d(TAG, "backward");
+        mPlayerStatus = PLAYER_STATUS.BACKWARD;
+        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
+
+        long seek_time = mExtractor.getSampleTime() - 10 * (1000 * 1000 / mFrameRate);
+        if (seek_time < 0) {
+            seek_time = 0;
+        }
+        mQueue.clear();
+        mDecoder.flush();
+        mExtractor.seekTo(seek_time, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
+        mDecoder.start();
+    }
+
+    /**
      * seek
      *
      * @param aProgress video seek time in milliseconds
@@ -290,7 +318,6 @@ class VideoPlayer extends MediaCodec.Callback {
      */
     private void releaseOutputBuffer(@NonNull MediaCodec aCodec, int aOutputBufferId) {
         Log.d(TAG, "releaseOutputBuffer");
-        long sample_time;
         switch (mPlayerStatus) {
             case INITIALIZED:
             case STOPPED:
@@ -298,21 +325,38 @@ class VideoPlayer extends MediaCodec.Callback {
             case PAUSED:
             case PLAYING:
             case FORWARD:
-            case BACKWARD:
                 aCodec.releaseOutputBuffer(aOutputBufferId, true);
-                sample_time = mExtractor.getSampleTime();
-                Log.d(TAG, "sample time :" + sample_time);
-                if (sample_time > 0) {
-                    int progress = (int) (sample_time / 1000);
-                    mVideoListener.onProgressChanged(progress);
+                mLastRenderTime = mExtractor.getSampleTime();
+                Log.d(TAG, "sample time :" + mLastRenderTime);
+                if (mLastRenderTime > 0) {
+                    mVideoListener.onProgressChanged((int) (mLastRenderTime / 1000));
                 }
+                break;
+            case BACKWARD:
+                long sample_time = mExtractor.getSampleTime();
+                Log.d(TAG, "================================");
+                Log.d(TAG, "last render time :" + mLastRenderTime);
+                Log.d(TAG, "sample time      :" + sample_time);
+                if (sample_time > (mLastRenderTime - 2 * (1000 * 1000 / mFrameRate))) {
+                    aCodec.releaseOutputBuffer(aOutputBufferId, true);
+                    mLastRenderTime = sample_time;
+                    Log.d(TAG, "render           : true");
+                    if (sample_time > 0) {
+                        mVideoListener.onProgressChanged((int) (sample_time / 1000));
+                    }
+                    mPlayerStatus = PLAYER_STATUS.PAUSED;
+                } else {
+                    aCodec.releaseOutputBuffer(aOutputBufferId, false);
+                    Log.d(TAG, "render           : false");
+                }
+                Log.d(TAG, "================================");
                 break;
             case SEEK_RENDER_START:
                 mPlayerStatus = PLAYER_STATUS.SEEK_RENDER_FINISH;
                 mLastSeekTime = System.currentTimeMillis();
                 aCodec.releaseOutputBuffer(aOutputBufferId, true);
-                sample_time = mExtractor.getSampleTime();
-                Log.d(TAG, "sample time :" + sample_time);
+                mLastRenderTime = mExtractor.getSampleTime();
+                Log.d(TAG, "sample time :" + mLastRenderTime);
                 break;
             case SEEK_RENDER_FINISH:
                 return;

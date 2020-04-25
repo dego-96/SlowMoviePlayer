@@ -63,7 +63,7 @@ class VideoController {
 
             @Override
             public void onPlayerStatusChanged(VideoPlayer.PLAYER_STATUS aStatus) {
-                Log.d(TAG, "onProgressChanged( " + aStatus.name() + ")");
+                Log.d(TAG, "onPlayerStatusChanged(" + aStatus.name() + ")");
                 setVisibility(aStatus);
             }
 
@@ -172,7 +172,7 @@ class VideoController {
             case PLAYING:
                 mNoVideoImageView.setVisibility(View.GONE);
                 mGalleryImageView.setVisibility(View.INVISIBLE);
-                mBackwardImageView.setVisibility(View.GONE);    // no support
+                mBackwardImageView.setVisibility(View.INVISIBLE);
                 mForwardImageView.setVisibility(View.INVISIBLE);
                 mPlayImageView.setVisibility(View.VISIBLE);
                 mPlayImageView.setImageResource(R.drawable.pause);
@@ -191,7 +191,7 @@ class VideoController {
             case SEEK_RENDER_FINISH:
                 mNoVideoImageView.setVisibility(View.GONE);
                 mGalleryImageView.setVisibility(View.VISIBLE);
-                mBackwardImageView.setVisibility(View.GONE);    // no support
+                mBackwardImageView.setVisibility(View.VISIBLE);
                 mForwardImageView.setVisibility(View.VISIBLE);
                 mPlayImageView.setVisibility(View.VISIBLE);
                 mPlayImageView.setImageResource(R.drawable.play);
@@ -252,6 +252,13 @@ class VideoController {
         }
     }
 
+    void videoBackward() {
+        Log.d(TAG, "videoBackward");
+        if (mPlayer != null) {
+            mPlayer.backward();
+        }
+    }
+
     /**
      * fullScreenAnimationStart
      */
@@ -279,15 +286,18 @@ class VideoController {
         ObjectAnimator animatorTrans_Buttons = ObjectAnimator.ofFloat(mControlButtonsLayout, "translationY", fromY, toY);
         ObjectAnimator animatorTrans_SeekBar = ObjectAnimator.ofFloat(mSeekBarLayout, "translationY", fromY, toY);
         ObjectAnimator animatorTrans_Forward = ObjectAnimator.ofFloat(mForwardImageView, "translationX", fromX, toX);
-        ObjectAnimator animatorTrans_Gallery = ObjectAnimator.ofFloat(mGalleryImageView, "translationX", -1.0f * fromX, -1.0f * toX);
+        ObjectAnimator animatorTrans_Backward = ObjectAnimator.ofFloat(mBackwardImageView, "translationX", -1.0f * fromX, -1.0f * toX);
+        ObjectAnimator animatorTrans_Gallery = ObjectAnimator.ofFloat(mGalleryImageView, "translationY", -1.0f * fromY, -1.0f * toY);
 
         animatorTrans_Buttons.setDuration(ANIMATOR_DURATION);
         animatorTrans_SeekBar.setDuration(ANIMATOR_DURATION);
         animatorTrans_Forward.setDuration(ANIMATOR_DURATION);
+        animatorTrans_Backward.setDuration(ANIMATOR_DURATION);
         animatorTrans_Gallery.setDuration(ANIMATOR_DURATION);
         animatorList.add(animatorTrans_Buttons);
         animatorList.add(animatorTrans_SeekBar);
         animatorList.add(animatorTrans_Forward);
+        animatorList.add(animatorTrans_Backward);
         animatorList.add(animatorTrans_Gallery);
 
         AnimatorSet animatorSet = new AnimatorSet();

@@ -43,7 +43,9 @@
             android:layout_height="50dp"
             android:layout_gravity="start|center_vertical"
             android:layout_margin="10dp"
+            android:clickable="false"
             android:contentDescription="@string/content_button_backward"
+            android:onClick="onBackwardButtonClicked"
             android:src="@drawable/backward"
             android:visibility="invisible" />
 
