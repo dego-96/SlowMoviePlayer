@@ -359,6 +359,7 @@ class VideoPlayer extends MediaCodec.Callback {
                 mLastSeekTime = System.currentTimeMillis();
                 aCodec.releaseOutputBuffer(aOutputBufferId, true);
                 mLastRenderTime = mExtractor.getSampleTime();
+                mVideoListener.onProgressChanged((int) (mLastRenderTime / 1000));
                 Log.d(TAG, "sample time :" + mLastRenderTime);
                 break;
             case SEEK_RENDER_FINISH:
