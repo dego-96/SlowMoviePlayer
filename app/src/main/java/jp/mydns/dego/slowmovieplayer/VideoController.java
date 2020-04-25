@@ -62,9 +62,9 @@ class VideoController {
         mPlayer.setVideoStatusChangeListener(new OnVideoStatusChangeListener() {
 
             @Override
-            public void onPlayerStatusChanged(VideoPlayer.PLAYER_STATUS aStatus) {
-                Log.d(TAG, "onPlayerStatusChanged(" + aStatus.name() + ")");
-                setVisibility(aStatus);
+            public void onPlayerStatusChanged(VideoPlayer aPlayer) {
+                Log.d(TAG, "onPlayerStatusChanged(" + aPlayer.getPlayerStatus().name() + ")");
+                updateVisibility();
             }
 
             @Override
@@ -91,7 +91,7 @@ class VideoController {
             @Override
             public void onPlayToEnd() {
                 Log.d(TAG, "onPlayToEnd");
-                setVisibility(VideoPlayer.PLAYER_STATUS.PAUSED);
+                updateVisibility();
             }
         });
 
@@ -145,17 +145,12 @@ class VideoController {
 
         mFrameOuted = false;
 
-        this.setVisibility(VideoPlayer.PLAYER_STATUS.INITIALIZED);
+        updateVisibility();
     }
 
-    /**
-     * setVisibility
-     *
-     * @param aPlayerStatus video player status
-     */
-    void setVisibility(VideoPlayer.PLAYER_STATUS aPlayerStatus) {
-        Log.d(TAG, "setVisibility( " + aPlayerStatus.name() + " )");
-        switch (aPlayerStatus) {
+    void setVisibility(VideoPlayer.PLAYER_STATUS aStatus) {
+        Log.d(TAG, "setVisibility( " + aStatus.name() + " )");
+        switch (aStatus) {
             case INITIALIZED:
                 mNoVideoImageView.setVisibility(View.VISIBLE);
                 mGalleryImageView.setVisibility(View.VISIBLE);
@@ -203,8 +198,20 @@ class VideoController {
                 mRemainTimeTextView.setVisibility(View.VISIBLE);
                 break;
             default:
-                Log.e(TAG, "invalid player status :" + aPlayerStatus);
+                Log.e(TAG, "invalid player status :" + mPlayer.getPlayerStatus());
                 break;
+        }
+    }
+
+    /**
+     * setVisibility
+     */
+    private void updateVisibility() {
+        Log.d(TAG, "updateVisibility");
+        if (mPlayer.getPlayerStatus() != null) {
+            setVisibility(mPlayer.getPlayerStatus());
+        } else {
+            setVisibility(VideoPlayer.PLAYER_STATUS.INITIALIZED);
         }
     }
 
@@ -252,6 +259,9 @@ class VideoController {
         }
     }
 
+    /**
+     * videoBackward
+     */
     void videoBackward() {
         Log.d(TAG, "videoBackward");
         if (mPlayer != null) {
@@ -270,16 +280,16 @@ class VideoController {
 
         if (mFrameOuted) {
             // animation (frame in)
-            fromX = 180.0f;
+            fromX = 280.0f;
             toX = 0.0f;
-            fromY = 180.0f;
+            fromY = 280.0f;
             toY = 0.0f;
         } else {
             // animation (frame out)
             fromX = 0.0f;
-            toX = 180.0f;
+            toX = 280.0f;
             fromY = 0.0f;
-            toY = 180.0f;
+            toY = 280.0f;
         }
         mFrameOuted = !mFrameOuted;
 

@@ -2,7 +2,7 @@ package jp.mydns.dego.slowmovieplayer;
 
 public interface OnVideoStatusChangeListener {
 
-    void onPlayerStatusChanged(VideoPlayer.PLAYER_STATUS status);
+    void onPlayerStatusChanged(VideoPlayer player);
 
     void onProgressChanged(int progress);
 

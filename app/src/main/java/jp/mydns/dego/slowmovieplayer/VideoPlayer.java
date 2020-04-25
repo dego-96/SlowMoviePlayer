@@ -136,6 +136,7 @@ class VideoPlayer extends MediaCodec.Callback {
         mFilePath = aFilePath;
         mSurface = aSurface;
         mPlayerStatus = PLAYER_STATUS.INITIALIZED;
+        /* ちらつき防止のためViewは更新しない */
         init();
     }
 
@@ -180,7 +181,6 @@ class VideoPlayer extends MediaCodec.Callback {
         } else {
             mQueue.clear();
         }
-        mVideoListener.onPlayerStatusChanged(PLAYER_STATUS.PAUSED);
         mDecoder.start();
     }
 
@@ -190,7 +190,7 @@ class VideoPlayer extends MediaCodec.Callback {
     void play() {
         Log.d(TAG, "play");
         mPlayerStatus = PLAYER_STATUS.PLAYING;
-        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
+        mVideoListener.onPlayerStatusChanged(this);
         if (mPlayToEnd) {
             mPlayToEnd = false;
             mDecoder.stop();
@@ -209,7 +209,7 @@ class VideoPlayer extends MediaCodec.Callback {
     void pause() {
         Log.d(TAG, "pause");
         mPlayerStatus = PLAYER_STATUS.PAUSED;
-        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
+        mVideoListener.onPlayerStatusChanged(this);
     }
 
     /**
@@ -218,7 +218,7 @@ class VideoPlayer extends MediaCodec.Callback {
     void stop() {
         Log.d(TAG, "stop");
         mPlayerStatus = PLAYER_STATUS.STOPPED;
-        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
+        mVideoListener.onPlayerStatusChanged(this);
         mDecoder.stop();
         mDecoder.release();
         init();
@@ -230,7 +230,7 @@ class VideoPlayer extends MediaCodec.Callback {
     void forward() {
         Log.d(TAG, "forward");
         mPlayerStatus = PLAYER_STATUS.FORWARD;
-        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
+        mVideoListener.onPlayerStatusChanged(this);
         if (mPlayerStatus != PLAYER_STATUS.PLAYING) {
             mPlayerStatus = PLAYER_STATUS.PAUSED;
             runQueuedProcess(true);
@@ -243,7 +243,7 @@ class VideoPlayer extends MediaCodec.Callback {
     void backward() {
         Log.d(TAG, "backward");
         mPlayerStatus = PLAYER_STATUS.BACKWARD;
-        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
+        mVideoListener.onPlayerStatusChanged(this);
 
         long seek_time = mExtractor.getSampleTime() - 10 * (1000 * 1000 / mFrameRate);
         if (seek_time < 0) {
@@ -269,7 +269,7 @@ class VideoPlayer extends MediaCodec.Callback {
             return;
         }
         mPlayerStatus = PLAYER_STATUS.SEEK_RENDER_START;
-        mVideoListener.onPlayerStatusChanged(mPlayerStatus);
+        mVideoListener.onPlayerStatusChanged(this);
 
         Log.d(TAG, "seekTo : " + aProgress * 1000);
         mQueue.clear();
@@ -322,6 +322,7 @@ class VideoPlayer extends MediaCodec.Callback {
             case INITIALIZED:
             case STOPPED:
                 mPlayerStatus = PLAYER_STATUS.PAUSED;
+                mVideoListener.onPlayerStatusChanged(this);
             case PAUSED:
             case PLAYING:
             case FORWARD:
@@ -345,6 +346,7 @@ class VideoPlayer extends MediaCodec.Callback {
                         mVideoListener.onProgressChanged((int) (sample_time / 1000));
                     }
                     mPlayerStatus = PLAYER_STATUS.PAUSED;
+                    mVideoListener.onPlayerStatusChanged(this);
                 } else {
                     aCodec.releaseOutputBuffer(aOutputBufferId, false);
                     Log.d(TAG, "render           : false");
@@ -353,6 +355,7 @@ class VideoPlayer extends MediaCodec.Callback {
                 break;
             case SEEK_RENDER_START:
                 mPlayerStatus = PLAYER_STATUS.SEEK_RENDER_FINISH;
+                mVideoListener.onPlayerStatusChanged(this);
                 mLastSeekTime = System.currentTimeMillis();
                 aCodec.releaseOutputBuffer(aOutputBufferId, true);
                 mLastRenderTime = mExtractor.getSampleTime();
