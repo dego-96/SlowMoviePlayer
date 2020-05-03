@@ -109,6 +109,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * onSpeedUpButtonClicked
+     *
+     * @param aView button view
+     */
+    public void onSpeedUpButtonClicked(View aView) {
+        Log.d(TAG, "onSpeedUpButtonClicked");
+    }
+
+    /**
+     * onSpeedDownButtonClicked
+     *
+     * @param aView button view
+     */
+    public void onSpeedDownButtonClicked(View aView) {
+        Log.d(TAG, "onSpeedDownButtonClicked");
+    }
+
+    /**
      * onActivityResult
      *
      * @param aRequestCode request code

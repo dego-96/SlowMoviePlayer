@@ -70,10 +70,10 @@ class VideoController {
             @Override
             public void onProgressChanged(int aProgress) {
                 Log.d(TAG, "onProgressChanged( " + aProgress + " )");
+
                 mSeekBar.setProgress(aProgress);
 
                 mCurrentTimeTextView.setText(sDateFormat.format(new Date(aProgress)));
-
                 int duration = mSeekBar.getMax();
                 if (aProgress < duration) {
                     mRemainTimeTextView.setText(sDateFormat.format(new Date(duration - aProgress)));
@@ -105,7 +105,7 @@ class VideoController {
                 switch (aMotionEvent.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         Log.d(TAG, "ACTION_DOWN");
-                        mTouchDownTime = System.currentTimeMillis();
+                        mTouchDownTime = System.nanoTime() / 1000 / 1000;
                         break;
                     case MotionEvent.ACTION_MOVE:
                         Log.d(TAG, "ACTION_MOVE");
@@ -116,7 +116,7 @@ class VideoController {
                         if (mPlayer != null &&
                                 mPlayer.getPlayerStatus() != null &&
                                 mPlayer.getPlayerStatus() != VideoPlayer.PLAYER_STATUS.INITIALIZED &&
-                                System.currentTimeMillis() - mTouchDownTime < TOUCH_DETECT_TIME_MAX) {
+                                (System.nanoTime() / 1000 / 1000) - mTouchDownTime < TOUCH_DETECT_TIME_MAX) {
                             Log.d(TAG, "player status :" + mPlayer.getPlayerStatus().name());
                             fullScreenAnimationStart();
                         }
@@ -158,8 +158,8 @@ class VideoController {
                 mForwardImageView.setVisibility(View.GONE);
                 mPlayImageView.setVisibility(View.GONE);
                 mStopImageView.setVisibility(View.GONE);
-                mSpeedUpImageView.setVisibility(View.GONE);     // no support
-                mSpeedDownImageView.setVisibility(View.GONE);   // no support
+                mSpeedUpImageView.setVisibility(View.GONE);
+                mSpeedDownImageView.setVisibility(View.GONE);
                 mSeekBar.setVisibility(View.GONE);
                 mCurrentTimeTextView.setVisibility(View.GONE);
                 mRemainTimeTextView.setVisibility(View.GONE);
@@ -172,8 +172,8 @@ class VideoController {
                 mPlayImageView.setVisibility(View.VISIBLE);
                 mPlayImageView.setImageResource(R.drawable.pause);
                 mStopImageView.setVisibility(View.VISIBLE);
-                mSpeedUpImageView.setVisibility(View.GONE);     // no support
-                mSpeedDownImageView.setVisibility(View.GONE);   // no support
+                mSpeedUpImageView.setVisibility(View.VISIBLE);
+                mSpeedDownImageView.setVisibility(View.VISIBLE);
                 mSeekBar.setVisibility(View.VISIBLE);
                 mCurrentTimeTextView.setVisibility(View.VISIBLE);
                 mRemainTimeTextView.setVisibility(View.VISIBLE);
@@ -191,8 +191,8 @@ class VideoController {
                 mPlayImageView.setVisibility(View.VISIBLE);
                 mPlayImageView.setImageResource(R.drawable.play);
                 mStopImageView.setVisibility(View.VISIBLE);
-                mSpeedUpImageView.setVisibility(View.GONE);     // no support
-                mSpeedDownImageView.setVisibility(View.GONE);   // no support
+                mSpeedUpImageView.setVisibility(View.VISIBLE);
+                mSpeedDownImageView.setVisibility(View.VISIBLE);
                 mSeekBar.setVisibility(View.VISIBLE);
                 mCurrentTimeTextView.setVisibility(View.VISIBLE);
                 mRemainTimeTextView.setVisibility(View.VISIBLE);

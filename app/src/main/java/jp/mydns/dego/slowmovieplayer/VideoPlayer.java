@@ -42,6 +42,8 @@ class VideoPlayer extends MediaCodec.Callback {
     private long mLastSeekTime;
     private long mLastRenderTime;
     private int mFrameRate;
+    private long mSystemTimeStart;
+    private long mVideoTimeStart;
 
     private OnVideoStatusChangeListener mVideoListener;
 
@@ -191,6 +193,8 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "play");
         mPlayerStatus = PLAYER_STATUS.PLAYING;
         mVideoListener.onPlayerStatusChanged(this);
+        mSystemTimeStart = System.nanoTime() / 1000;
+        mVideoTimeStart = mExtractor.getSampleTime();
         if (mPlayToEnd) {
             mPlayToEnd = false;
             mDecoder.stop();
@@ -232,7 +236,6 @@ class VideoPlayer extends MediaCodec.Callback {
         mPlayerStatus = PLAYER_STATUS.FORWARD;
         mVideoListener.onPlayerStatusChanged(this);
         if (mPlayerStatus != PLAYER_STATUS.PLAYING) {
-            mPlayerStatus = PLAYER_STATUS.PAUSED;
             runQueuedProcess(true);
         }
     }
@@ -264,7 +267,7 @@ class VideoPlayer extends MediaCodec.Callback {
         Log.d(TAG, "seek" + "  (from " + mPlayerStatus.name() + ")");
 
         if (mPlayerStatus == PLAYER_STATUS.SEEK_RENDER_START ||
-                System.currentTimeMillis() - mLastSeekTime < SEEK_RENDER_TIMEOUT) {
+                (System.nanoTime() / 1000 / 1000) - mLastSeekTime < SEEK_RENDER_TIMEOUT) {
             Log.d(TAG, "nothing to do.");
             return;
         }
@@ -321,13 +324,28 @@ class VideoPlayer extends MediaCodec.Callback {
         switch (mPlayerStatus) {
             case INITIALIZED:
             case STOPPED:
+            case FORWARD:
                 mPlayerStatus = PLAYER_STATUS.PAUSED;
                 mVideoListener.onPlayerStatusChanged(this);
-            case PAUSED:
-            case PLAYING:
-            case FORWARD:
                 aCodec.releaseOutputBuffer(aOutputBufferId, true);
                 mLastRenderTime = mExtractor.getSampleTime();
+                Log.d(TAG, "sample time :" + mLastRenderTime);
+                if (mLastRenderTime > 0) {
+                    mVideoListener.onProgressChanged((int) (mLastRenderTime / 1000));
+                }
+                break;
+            case PLAYING:
+                mLastRenderTime = mExtractor.getSampleTime();
+                long currentTime = System.nanoTime() / 1000;
+                while ((currentTime - mSystemTimeStart) < (mLastRenderTime - mVideoTimeStart)) {
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    currentTime = System.nanoTime() / 1000;
+                }
+                aCodec.releaseOutputBuffer(aOutputBufferId, true);
                 Log.d(TAG, "sample time :" + mLastRenderTime);
                 if (mLastRenderTime > 0) {
                     mVideoListener.onProgressChanged((int) (mLastRenderTime / 1000));
@@ -356,12 +374,13 @@ class VideoPlayer extends MediaCodec.Callback {
             case SEEK_RENDER_START:
                 mPlayerStatus = PLAYER_STATUS.SEEK_RENDER_FINISH;
                 mVideoListener.onPlayerStatusChanged(this);
-                mLastSeekTime = System.currentTimeMillis();
+                mLastSeekTime = (System.nanoTime() / 1000 / 1000);
                 aCodec.releaseOutputBuffer(aOutputBufferId, true);
                 mLastRenderTime = mExtractor.getSampleTime();
                 mVideoListener.onProgressChanged((int) (mLastRenderTime / 1000));
                 Log.d(TAG, "sample time :" + mLastRenderTime);
                 break;
+            case PAUSED:
             case SEEK_RENDER_FINISH:
                 return;
             default:
@@ -372,6 +391,9 @@ class VideoPlayer extends MediaCodec.Callback {
         if (mPlayToEnd) {
             mPlayerStatus = PLAYER_STATUS.PAUSED;
             mVideoListener.onPlayToEnd();
+            if (mLastRenderTime > 0) {
+                mVideoListener.onProgressChanged((int) (mLastRenderTime / 1000));
+            }
         }
     }
 

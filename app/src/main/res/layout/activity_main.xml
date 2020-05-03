@@ -25,6 +25,11 @@
             android:src="@drawable/no_video"
             android:visibility="visible" />
 
+        <TextView
+            android:id="@+id/text_view_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
         <!-- Gallery -->
         <ImageView
             android:id="@+id/button_gallery"
@@ -131,6 +136,7 @@
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_speed_down"
+                android:onClick="onSpeedDownButtonClicked"
                 android:src="@drawable/speed_down"
                 android:visibility="invisible" />
 
@@ -182,6 +188,7 @@
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_speed_up"
+                android:onClick="onSpeedUpButtonClicked"
                 android:src="@drawable/speed_up"
                 android:visibility="invisible" />
 
