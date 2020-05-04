@@ -303,7 +303,6 @@ class VideoPlayer extends MediaCodec.Callback {
         if (inputBuffer != null) {
             sampleSize = mExtractor.readSampleData(inputBuffer, 0);
         }
-        mPlayToEnd = !mExtractor.advance();
         if (!mPlayToEnd && sampleSize > 0) {
             aCodec.queueInputBuffer(aInputBufferId, 0, sampleSize, mExtractor.getSampleTime(), 0);
         } else {
@@ -311,6 +310,7 @@ class VideoPlayer extends MediaCodec.Callback {
             aCodec.queueInputBuffer(aInputBufferId, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
             mPlayToEnd = true;
         }
+        mPlayToEnd = !mExtractor.advance();
     }
 
     /**
