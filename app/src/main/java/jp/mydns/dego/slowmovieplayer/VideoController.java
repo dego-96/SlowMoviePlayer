@@ -120,12 +120,12 @@ class VideoController {
     }
 
     /**
-     * videoPlay
+     * videoPlayback
      */
-    void videoPlay() {
-        Log.d(TAG, "videoPlay");
+    void videoPlayback() {
+        Log.d(TAG, "videoPlayback");
         if (mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED) {
-            // pause => play
+            // pause => playback
             if (mThread == null || !mThread.isAlive()) {
                 mPlayer.setStatus(VideoRunnable.STATUS.PLAYING);
                 mViewController.setVisibility(VideoRunnable.STATUS.PLAYING);
@@ -133,7 +133,7 @@ class VideoController {
                 mThread.start();
             }
         } else if (mPlayer.getStatus() == VideoRunnable.STATUS.PLAYING) {
-            // play => pause
+            // playback => pause
             videoPause();
         } else if (mPlayer.getStatus() == VideoRunnable.STATUS.STOPPED) {
             mPlayer.release();
@@ -238,5 +238,59 @@ class VideoController {
         mPlayer.setStatus(VideoRunnable.STATUS.BACKWARD);
         mThread = new Thread(mPlayer);
         mThread.start();
+    }
+
+    /**
+     * videoSpeedUp
+     */
+    void videoSpeedUp() {
+        Log.d(TAG, "videoSpeedUp");
+
+        int speed = mPlayer.getSpeed();
+        switch (speed) {
+            case -4:
+                speed = -2;
+                break;
+            case -2:
+                speed = 0;
+                break;
+            case 0:
+                speed = 2;
+                break;
+            case 2:
+                speed = 4;
+                break;
+            case 4:
+                break;
+        }
+        mViewController.setPlaybackSpeed(speed);
+        mPlayer.setSpeed(speed);
+    }
+
+    /**
+     * videoSpeedDown
+     */
+    void videoSpeedDown() {
+        Log.d(TAG, "videoSpeedDown");
+
+        int speed = mPlayer.getSpeed();
+        switch (speed) {
+            case -4:
+                break;
+            case -2:
+                speed = -4;
+                break;
+            case 0:
+                speed = -2;
+                break;
+            case 2:
+                speed = 0;
+                break;
+            case 4:
+                speed = 2;
+                break;
+        }
+        mViewController.setPlaybackSpeed(speed);
+        mPlayer.setSpeed(speed);
     }
 }

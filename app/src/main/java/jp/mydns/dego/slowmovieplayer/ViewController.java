@@ -38,6 +38,7 @@ class ViewController {
     private ImageView mSpeedUpImageView;
     private ImageView mSpeedDownImageView;
     private SeekBar mSeekBar;
+    private TextView mPlaybackSpeedTextView;
     private TextView mCurrentTimeTextView;
     private TextView mRemainTimeTextView;
 
@@ -65,6 +66,7 @@ class ViewController {
         mSpeedUpImageView = aActivity.findViewById(R.id.button_speed_up);
         mSpeedDownImageView = aActivity.findViewById(R.id.button_speed_down);
         mSeekBar = aActivity.findViewById(R.id.seek_bar_progress);
+        mPlaybackSpeedTextView = aActivity.findViewById(R.id.text_view_speed);
         mCurrentTimeTextView = aActivity.findViewById(R.id.text_view_current_time);
         mRemainTimeTextView = aActivity.findViewById(R.id.text_view_remain_time);
 
@@ -106,6 +108,7 @@ class ViewController {
                 mSpeedUpImageView.setVisibility(View.GONE);
                 mSpeedDownImageView.setVisibility(View.GONE);
                 mSeekBar.setVisibility(View.GONE);
+                mPlaybackSpeedTextView.setVisibility(View.GONE);
                 mCurrentTimeTextView.setVisibility(View.GONE);
                 mRemainTimeTextView.setVisibility(View.GONE);
                 break;
@@ -118,13 +121,15 @@ class ViewController {
                 mPlayImageView.setVisibility(View.VISIBLE);
                 mPlayImageView.setImageResource(R.drawable.pause);
                 mStopImageView.setVisibility(View.VISIBLE);
-                mSpeedUpImageView.setVisibility(View.VISIBLE);
-                mSpeedDownImageView.setVisibility(View.VISIBLE);
+                mSpeedUpImageView.setVisibility(View.INVISIBLE);
+                mSpeedDownImageView.setVisibility(View.INVISIBLE);
                 mSeekBar.setVisibility(View.VISIBLE);
+                mPlaybackSpeedTextView.setVisibility(View.VISIBLE);
                 mCurrentTimeTextView.setVisibility(View.VISIBLE);
                 mRemainTimeTextView.setVisibility(View.VISIBLE);
                 break;
             case VIDEO_SELECTED:
+                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_init));
             case PAUSED:
             case STOPPED:
             case FORWARD:
@@ -141,6 +146,7 @@ class ViewController {
                 mSpeedUpImageView.setVisibility(View.VISIBLE);
                 mSpeedDownImageView.setVisibility(View.VISIBLE);
                 mSeekBar.setVisibility(View.VISIBLE);
+                mPlaybackSpeedTextView.setVisibility(View.VISIBLE);
                 mCurrentTimeTextView.setVisibility(View.VISIBLE);
                 mRemainTimeTextView.setVisibility(View.VISIBLE);
                 break;
@@ -178,6 +184,34 @@ class ViewController {
         mSeekBar.setMax(aDuration);
 
         mRemainTimeTextView.setText(sDateFormat.format(new Date(aDuration)));
+    }
+
+    /**
+     * setPlaybackSpeed
+     *
+     * @param aSpeed playback speed (-4, -2, 0, 2, 4)
+     */
+    void setPlaybackSpeed(int aSpeed) {
+        Log.d(TAG, "setPlaybackSpeed");
+        switch (aSpeed) {
+            case -4:
+                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x1_4));
+                break;
+            case -2:
+                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x1_2));
+                break;
+            case 0:
+                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_init));
+                break;
+            case 2:
+                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x2_0));
+                break;
+            case 4:
+                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x4_0));
+                break;
+            default:
+                break;
+        }
     }
 
     /**

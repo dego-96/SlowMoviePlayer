@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onPlayButtonClicked(View aView) {
         Log.d(TAG, "onPlayButtonClicked");
-        mVideoController.videoPlay();
+        mVideoController.videoPlayback();
     }
 
     /**
@@ -115,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onSpeedUpButtonClicked(View aView) {
         Log.d(TAG, "onSpeedUpButtonClicked");
+        mVideoController.videoSpeedUp();
     }
 
     /**
@@ -124,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onSpeedDownButtonClicked(View aView) {
         Log.d(TAG, "onSpeedDownButtonClicked");
+        mVideoController.videoSpeedDown();
     }
 
     /**

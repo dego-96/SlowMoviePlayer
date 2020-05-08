@@ -45,6 +45,16 @@ public class VideoRunnable implements Runnable {
     private int mOffsetTarget;
     private long mLastKeyFrameTime;
 
+    /* playback speed config
+     * -4 -> x1/4
+     * -2 -> x1/2
+     *  0 -> x1.0
+     *  2 -> x2.0
+     *  4 -> x4.0
+     * others -> prohibit */
+    private int mPlaybackSpeed;
+    private long mFrameCount;
+
     /**
      * VideoRunnable
      *
@@ -80,6 +90,7 @@ public class VideoRunnable implements Runnable {
         prepare(aFilePath);
 
         mVideoStatus = STATUS.VIDEO_SELECTED;
+        mPlaybackSpeed = 0;
     }
 
     /**
@@ -92,6 +103,7 @@ public class VideoRunnable implements Runnable {
             mExtractor.setDataSource(aFilePath);
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
 
         logMetaData(aFilePath);
@@ -126,7 +138,9 @@ public class VideoRunnable implements Runnable {
         mLastRenderTime = 0;
         mOffsetFromKeyFrame = 0;
         mLastKeyFrameTime = 0;
-        mDecoder.start();
+        if (mDecoder != null) {
+            mDecoder.start();
+        }
     }
 
     /**
@@ -139,6 +153,8 @@ public class VideoRunnable implements Runnable {
 
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         mIsEOS = false;
+        mFrameCount = 0;
+
         long videoTimeStart = mExtractor.getSampleTime();
         long systemTimeStart = System.nanoTime() / 1000;
         Log.d(TAG2, "-------- start time --------");
@@ -146,6 +162,7 @@ public class VideoRunnable implements Runnable {
         Log.d(TAG2, "video  : " + videoTimeStart);
         Log.d(TAG2, "render : " + mLastRenderTime);
         Log.d(TAG2, "----------------------------");
+        Log.d(TAG2, "playback speed : " + mPlaybackSpeed);
 
         while (!Thread.currentThread().isInterrupted()) {
             if (!mIsEOS) {
@@ -160,7 +177,13 @@ public class VideoRunnable implements Runnable {
                         sampleSize = -1;
                     }
                     if (sampleSize >= 0) {
-                        mDecoder.queueInputBuffer(inIndex, 0, sampleSize, mExtractor.getSampleTime(), 0);
+                        long sampleTime;
+                        if (mPlaybackSpeed > 0) {
+                            sampleTime = mExtractor.getSampleTime() / (long) mPlaybackSpeed;
+                        } else {
+                            sampleTime = mExtractor.getSampleTime();
+                        }
+                        mDecoder.queueInputBuffer(inIndex, 0, sampleSize, sampleTime, 0);
                         mExtractor.advance();
                     } else {
                         mDecoder.queueInputBuffer(inIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
@@ -225,15 +248,31 @@ public class VideoRunnable implements Runnable {
 
         switch (mVideoStatus) {
             case PLAYING:
-                Log.d(TAG2, "mLastRenderTime : " + mLastRenderTime);
-                long currentTime = System.nanoTime() / 1000;
-                while ((currentTime - aSystemTimeStart) < (mLastRenderTime - aVideoTimeStart)) {
+                mFrameCount++;
+                Log.d(TAG2, "frame count : " + mFrameCount);
+                if (mPlaybackSpeed > 0 && (mFrameCount % mPlaybackSpeed) != 0) {
+                    mDecoder.releaseOutputBuffer(aOutputBufferId, false);
+                    break;
+                }
+                long systemTime = System.nanoTime() / 1000 - aSystemTimeStart;
+                long videoTime = mLastRenderTime - aVideoTimeStart;
+                if (mPlaybackSpeed > 0) {
+                    systemTime = systemTime * (long) mPlaybackSpeed;
+                } else if (mPlaybackSpeed < 0) {
+                    systemTime = systemTime / (-1 * (long) mPlaybackSpeed);
+                }
+                while (systemTime < videoTime) {
                     try {
                         Thread.sleep(1);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    currentTime = System.nanoTime() / 1000;
+                    systemTime = System.nanoTime() / 1000 - aSystemTimeStart;
+                    if (mPlaybackSpeed > 0) {
+                        systemTime = systemTime * (long) mPlaybackSpeed;
+                    } else if (mPlaybackSpeed < 0) {
+                        systemTime = systemTime / (-1 * (long) mPlaybackSpeed);
+                    }
                 }
             case VIDEO_SELECTED:
             case STOPPED:
@@ -244,14 +283,22 @@ public class VideoRunnable implements Runnable {
                 Log.d(TAG2, "mLastRenderTime : " + mLastRenderTime);
 
                 if (aInfo.presentationTimeUs > 0 || mLastRenderTime > 0) {
-                    setProgress(aInfo.presentationTimeUs);
+                    if (mPlaybackSpeed > 0) {
+                        setProgress(aInfo.presentationTimeUs * mPlaybackSpeed);
+                    } else {
+                        setProgress(aInfo.presentationTimeUs);
+                    }
                 }
                 break;
             case BACKWARD:
                 if (mOffsetFromKeyFrame == mOffsetTarget) {
                     mDecoder.releaseOutputBuffer(aOutputBufferId, true);
                     mVideoStatus = STATUS.PAUSED;
-                    setProgress(aInfo.presentationTimeUs);
+                    if (mPlaybackSpeed > 0) {
+                        setProgress(aInfo.presentationTimeUs * mPlaybackSpeed);
+                    } else {
+                        setProgress(aInfo.presentationTimeUs);
+                    }
                 } else {
                     mDecoder.releaseOutputBuffer(aOutputBufferId, false);
                 }
@@ -317,6 +364,29 @@ public class VideoRunnable implements Runnable {
         mDecoder.stop();
         mDecoder.release();
         mExtractor.release();
+    }
+
+    /**
+     * getSpeed
+     *
+     * @return playback speed
+     */
+    int getSpeed() {
+        return mPlaybackSpeed;
+    }
+
+    /**
+     * setSpeed
+     *
+     * @param aSpeed playback speed (-4, -2, 0, 2, 4)
+     */
+    void setSpeed(int aSpeed) {
+        Log.d(TAG1, "setSpeed(" + aSpeed + ")");
+        if (aSpeed == -4 || aSpeed == -2 || aSpeed == 0 || aSpeed == 2 || aSpeed == 4) {
+            mPlaybackSpeed = aSpeed;
+        } else {
+            Log.e(TAG1, "invalid speed setting : " + aSpeed);
+        }
     }
 
     /**
