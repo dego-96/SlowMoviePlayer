@@ -188,7 +188,6 @@ public class MainActivity extends AppCompatActivity {
         if (aResultCode == Activity.RESULT_OK) {
             video_path = getPathFromUri(aData);
             mVideoController.setVideoPath(video_path);
-            mVideoController.setVisibility(VideoPlayer.PLAYER_STATUS.PAUSED);
             Log.d(TAG, "video path :" + video_path);
         }
         if ("".equals(video_path)) {
