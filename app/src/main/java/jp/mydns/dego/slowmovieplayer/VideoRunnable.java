@@ -3,6 +3,7 @@ package jp.mydns.dego.slowmovieplayer;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
+import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
@@ -92,6 +93,8 @@ public class VideoRunnable implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        logMetaData(aFilePath);
 
         for (int index = 0; index < mExtractor.getTrackCount(); index++) {
             MediaFormat format = mExtractor.getTrackFormat(index);
@@ -314,6 +317,27 @@ public class VideoRunnable implements Runnable {
         mDecoder.stop();
         mDecoder.release();
         mExtractor.release();
+    }
+
+    /**
+     * logMetaData
+     */
+    private void logMetaData(String aFilePath) {
+        Log.d(TAG1, "logMetaData");
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(aFilePath);
+
+        Log.d(TAG1, "==================================================");
+        Log.d(TAG1, "has audio  :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_AUDIO));
+        Log.d(TAG1, "has video  :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO));
+        Log.d(TAG1, "date       :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE));
+        Log.d(TAG1, "width      :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+        Log.d(TAG1, "height     :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+        Log.d(TAG1, "duration   :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+        Log.d(TAG1, "rotation   :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
+        Log.d(TAG1, "num tracks :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS));
+        Log.d(TAG1, "title      :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+        Log.d(TAG1, "==================================================");
     }
 
     /**
