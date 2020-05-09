@@ -48,10 +48,21 @@ class VideoController {
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
                 Log.d(TAG, "surfaceChanged");
                 if (mFilePath != null) {
-                    mPlayer.init(mFilePath, holder.getSurface());
-                    mViewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
-                    mThread = new Thread(mPlayer);
-                    mThread.start();
+                    if (mThread != null && mThread.isAlive()) {
+                        try {
+                            mThread.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        return;
+                    }
+                    if (mPlayer.getStatus() == VideoRunnable.STATUS.INIT ||
+                            mPlayer.getStatus() == VideoRunnable.STATUS.VIDEO_SELECTED) {
+                        mPlayer.init(mFilePath, holder.getSurface());
+                        mViewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
+                        mThread = new Thread(mPlayer);
+                        mThread.start();
+                    }
                 }
             }
 

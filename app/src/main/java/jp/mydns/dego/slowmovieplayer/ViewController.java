@@ -75,9 +75,6 @@ class ViewController {
         mCurrentTimeTextView = aActivity.findViewById(R.id.text_view_current_time);
         mRemainTimeTextView = aActivity.findViewById(R.id.text_view_remain_time);
 
-        Log.d(TAG, "R.id.button_gallery :" + R.id.button_gallery);
-        Log.d(TAG, "ImageView.getId     :" + mGalleryImageView.getId());
-
         mControlButtonsLayout = aActivity.findViewById(R.id.layout_control_buttons);
         mSeekBarLayout = aActivity.findViewById(R.id.layout_seek_bar);
 
