@@ -12,12 +12,16 @@ class VideoController {
 
     private static final String TAG = "VideoController";
     private static final int TOUCH_DETECT_TIME_MAX = 200;
+    private static final int TOUCH_X_DIFF_SIZE = 50;
 
     private ViewController mViewController;
     private VideoRunnable mPlayer;
     private String mFilePath;
     private Thread mThread;
     private long mTouchDownTime;
+    private float mTouchStartX;
+    private int mTouchXDiffLevel;
+    private int mTouchXDiffLevelLast;
 
     /**
      * VideoController
@@ -80,6 +84,7 @@ class VideoController {
                         }
                     }
                     mPlayer.release();
+                    mPlayer.setStatus(VideoRunnable.STATUS.VIDEO_SELECTED);
                 }
             }
         });
@@ -92,9 +97,28 @@ class VideoController {
                     case MotionEvent.ACTION_DOWN:
                         Log.d(TAG, "ACTION_DOWN");
                         mTouchDownTime = System.nanoTime() / 1000 / 1000;
+                        mTouchStartX = aMotionEvent.getX();
+                        mTouchXDiffLevel = 0;
+                        mTouchXDiffLevelLast = 0;
                         break;
                     case MotionEvent.ACTION_MOVE:
                         Log.d(TAG, "ACTION_MOVE");
+                        float touchX = aMotionEvent.getX();
+                        int diffX = (int) (touchX - mTouchStartX);
+                        Log.d(TAG, "diff x : " + diffX);
+
+                        mTouchXDiffLevel = diffX / TOUCH_X_DIFF_SIZE;
+                        if (mPlayer != null && mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED &&
+                                mTouchXDiffLevelLast != mTouchXDiffLevel) {
+                            if (mTouchXDiffLevelLast < mTouchXDiffLevel) {
+                                videoForward();
+                                mTouchXDiffLevelLast = mTouchXDiffLevel;
+                            }
+                            if (mTouchXDiffLevelLast > mTouchXDiffLevel) {
+                                videoBackward();
+                            }
+                            mTouchXDiffLevelLast = mTouchXDiffLevel;
+                        }
                         break;
                     case MotionEvent.ACTION_UP:
                         Log.d(TAG, "ACTION_UP");
