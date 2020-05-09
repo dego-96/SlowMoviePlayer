@@ -180,7 +180,7 @@ class ViewController {
             case VIDEO_SELECTED:
                 mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_init));
             case PAUSED:
-            case STOPPED:
+            case VIDEO_END:
             case FORWARD:
             case BACKWARD:
             case SEEKING:

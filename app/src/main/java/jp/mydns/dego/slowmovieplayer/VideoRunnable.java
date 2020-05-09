@@ -23,7 +23,7 @@ public class VideoRunnable implements Runnable {
         VIDEO_SELECTED,
         PAUSED,
         PLAYING,
-        STOPPED,
+        VIDEO_END,
         SEEKING,
         FORWARD,
         BACKWARD
@@ -173,6 +173,7 @@ public class VideoRunnable implements Runnable {
                     } else {
                         sampleSize = -1;
                     }
+                    Log.d(TAG2, "sample size : " + sampleSize);
                     if (sampleSize >= 0) {
                         long sampleTime;
                         if (mPlaybackSpeed > 0) {
@@ -180,9 +181,11 @@ public class VideoRunnable implements Runnable {
                         } else {
                             sampleTime = mExtractor.getSampleTime();
                         }
+                        Log.d(TAG2, "sample time : " + sampleTime);
                         mDecoder.queueInputBuffer(inIndex, 0, sampleSize, sampleTime, 0);
                         mExtractor.advance();
                     } else {
+                        Log.d(TAG2, "InputBuffer BUFFER_FLAG_END_OF_STREAM");
                         mDecoder.queueInputBuffer(inIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
                         mIsEOS = true;
                     }
@@ -190,12 +193,12 @@ public class VideoRunnable implements Runnable {
             }
 
             int outIndex = mDecoder.dequeueOutputBuffer(info, 10000);
+            Log.d(TAG2, "Output Buffer Index : " + outIndex);
             if (outIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                Log.d(TAG2, "INFO_OUTPUT_FORMAT_CHANGED (" + outIndex + ")");
+                Log.d(TAG2, "INFO_OUTPUT_FORMAT_CHANGED");
             } else if (outIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
-                Log.d(TAG2, "INFO_TRY_AGAIN_LATER (" + outIndex + ")");
+                Log.d(TAG2, "INFO_TRY_AGAIN_LATER");
             } else {
-                Log.d(TAG2, "Output Buffer Index : " + outIndex);
                 if (outIndex >= 0) {
                     if ((info.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0) {
                         mOffsetFromKeyFrame = 0;
@@ -209,11 +212,20 @@ public class VideoRunnable implements Runnable {
                     releaseOutputBuffer(info, outIndex, systemTimeStart, videoTimeStart);
 
                     if (mVideoStatus == STATUS.VIDEO_SELECTED ||
-                            mVideoStatus == STATUS.STOPPED ||
-                            mVideoStatus == STATUS.SEEKING ||
-                            mVideoStatus == STATUS.FORWARD) {
+                            mVideoStatus == STATUS.VIDEO_END ||
+                            mVideoStatus == STATUS.SEEKING) {
                         mVideoStatus = STATUS.PAUSED;
                         Log.d(TAG2, "change status : " + mVideoStatus.name());
+                        return;
+                    } else if (mVideoStatus == STATUS.FORWARD) {
+                        if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                            Log.d(TAG2, "OutputBuffer BUFFER_FLAG_END_OF_STREAM");
+                            mVideoStatus = STATUS.VIDEO_END;
+                            setVisibility();
+                        } else {
+                            mVideoStatus = STATUS.PAUSED;
+                            Log.d(TAG2, "change status : " + mVideoStatus.name());
+                        }
                         return;
                     }
                 }
@@ -222,12 +234,11 @@ public class VideoRunnable implements Runnable {
             // All decoded frames have been rendered, we can stop playing now
             if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                 Log.d(TAG2, "OutputBuffer BUFFER_FLAG_END_OF_STREAM");
-                mVideoStatus = STATUS.STOPPED;
+                mVideoStatus = STATUS.VIDEO_END;
                 setVisibility();
-                break;
+                return;
             }
-            if (mVideoStatus == STATUS.INIT ||
-                    mVideoStatus == STATUS.PAUSED) {
+            if (mVideoStatus == STATUS.PAUSED) {
                 return;
             }
         }
@@ -272,7 +283,7 @@ public class VideoRunnable implements Runnable {
                     }
                 }
             case VIDEO_SELECTED:
-            case STOPPED:
+            case VIDEO_END:
             case SEEKING:
             case FORWARD:
                 mDecoder.releaseOutputBuffer(aOutputBufferId, true);

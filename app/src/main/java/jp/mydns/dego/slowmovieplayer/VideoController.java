@@ -168,7 +168,7 @@ class VideoController {
         } else if (mPlayer.getStatus() == VideoRunnable.STATUS.PLAYING) {
             // playback => pause
             videoPause();
-        } else if (mPlayer.getStatus() == VideoRunnable.STATUS.STOPPED) {
+        } else if (mPlayer.getStatus() == VideoRunnable.STATUS.VIDEO_END) {
             mPlayer.release();
             mPlayer.prepare(mFilePath);
             mPlayer.setStatus(VideoRunnable.STATUS.PLAYING);
@@ -206,8 +206,8 @@ class VideoController {
         }
         mPlayer.release();
         mPlayer.prepare(mFilePath);
-        mPlayer.setStatus(VideoRunnable.STATUS.STOPPED);
-        mViewController.setVisibility(VideoRunnable.STATUS.STOPPED);
+        mPlayer.setStatus(VideoRunnable.STATUS.VIDEO_SELECTED);
+        mViewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
         mThread = new Thread(mPlayer);
         mThread.start();
     }
@@ -249,9 +249,11 @@ class VideoController {
                 e.printStackTrace();
             }
         }
-        mPlayer.setStatus(VideoRunnable.STATUS.FORWARD);
-        mThread = new Thread(mPlayer);
-        mThread.start();
+        if (mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED) {
+            mPlayer.setStatus(VideoRunnable.STATUS.FORWARD);
+            mThread = new Thread(mPlayer);
+            mThread.start();
+        }
     }
 
     /**
