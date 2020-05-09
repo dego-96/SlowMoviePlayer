@@ -4,8 +4,11 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.graphics.Point;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -46,6 +49,8 @@ class ViewController {
     private LinearLayout mControlButtonsLayout;
     private LinearLayout mSeekBarLayout;
 
+    private Display mDisplay;
+
     /**
      * ViewController
      *
@@ -77,6 +82,8 @@ class ViewController {
         mSeekBarLayout = aActivity.findViewById(R.id.layout_seek_bar);
 
         mFrameOuted = false;
+
+        mDisplay = aActivity.getWindowManager().getDefaultDisplay();
     }
 
     /**
@@ -87,6 +94,51 @@ class ViewController {
      */
     View getView(int aId) {
         return mActivity.findViewById(aId);
+    }
+
+    /**
+     * setSurfaceViewSize
+     *
+     * @param aVideoWidth  width
+     * @param aVideoHeight height
+     * @param aRotation    rotation
+     */
+    @SuppressWarnings("all")
+    void setSurfaceViewSize(int aVideoWidth, int aVideoHeight, int aRotation) {
+        Log.d(TAG, "setSurfaceViewSize");
+
+        Point point = new Point();
+        mDisplay.getSize(point);
+        int displayWidth = point.x;
+        int displayHeight = point.y;
+        Log.d(TAG, "display width  : " + displayWidth);
+        Log.d(TAG, "display height : " + displayHeight);
+
+        ViewGroup.LayoutParams params = mSurfaceView.getLayoutParams();
+        if ((aRotation % 180) == 0) {
+            // 横画面
+            if (((float) displayWidth / (float) displayHeight) > ((float) aVideoWidth / (float) aVideoHeight)) {
+                // 画面より縦長
+                params.width = (int) ((float) aVideoWidth * ((float) displayHeight / (float) aVideoHeight));
+                params.height = displayHeight;
+            } else {
+                // 画面より横長
+                params.width = displayWidth;
+                params.height = (int) ((float) aVideoHeight * ((float) displayWidth / (float) aVideoWidth));
+            }
+        } else {
+            // 縦画面
+            if (((float) displayWidth / (float) displayHeight) > ((float) aVideoHeight / (float) aVideoWidth)) {
+                // 画面より縦長
+                params.height = (int) ((float) aVideoWidth * ((float) displayHeight / (float) aVideoHeight));
+                params.width = displayHeight;
+            } else {
+                // 画面より横長
+                params.height = displayWidth;
+                params.width = (int) ((float) aVideoHeight * ((float) displayWidth / (float) aVideoWidth));
+            }
+        }
+        mSurfaceView.setLayoutParams(params);
     }
 
     /**

@@ -1,6 +1,7 @@
 package jp.mydns.dego.slowmovieplayer;
 
 import android.app.Activity;
+import android.media.MediaMetadataRetriever;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -129,6 +130,15 @@ class VideoController {
      */
     void setVideoPath(String aPath) {
         mFilePath = aPath;
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(aPath);
+
+        logMetaData(retriever);
+
+        int width = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+        int height = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+        int rotation = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
+        mViewController.setSurfaceViewSize(width, height, rotation);
     }
 
     /**
@@ -305,4 +315,26 @@ class VideoController {
         mViewController.setPlaybackSpeed(speed);
         mPlayer.setSpeed(speed);
     }
+
+    /**
+     * logMetaData
+     *
+     * @param aRetriever media meta data retriever
+     */
+    private void logMetaData(MediaMetadataRetriever aRetriever) {
+        Log.d(TAG, "logMetaData");
+
+        Log.d(TAG, "==================================================");
+        Log.d(TAG, "has audio  :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_AUDIO));
+        Log.d(TAG, "has video  :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO));
+        Log.d(TAG, "date       :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE));
+        Log.d(TAG, "width      :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+        Log.d(TAG, "height     :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+        Log.d(TAG, "duration   :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+        Log.d(TAG, "rotation   :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
+        Log.d(TAG, "num tracks :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS));
+        Log.d(TAG, "title      :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+        Log.d(TAG, "==================================================");
+    }
+
 }
