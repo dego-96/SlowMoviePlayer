@@ -57,6 +57,18 @@ class VideoController {
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
                 Log.d(TAG, "surfaceDestroyed");
+                if (mFilePath != null) {
+                    mPlayer.setStatus(VideoRunnable.STATUS.PAUSED);
+                    if (mThread.isAlive()) {
+                        try {
+                            Log.d(TAG, "join");
+                            mThread.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    mPlayer.release();
+                }
             }
         });
         surfaceView.setOnTouchListener(new View.OnTouchListener() {
