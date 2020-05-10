@@ -31,6 +31,7 @@ class VideoController {
     VideoController(final Activity aActivity) {
         Log.d(TAG, "VideoController");
         mViewController = new ViewController(aActivity);
+        mViewController.setVisibility(VideoRunnable.STATUS.INIT);
         mPlayer = new VideoRunnable(new VideoPlayerHandler(mViewController));
 
         mPlayer.setOnVideoStatusChangeListener(new OnVideoStatusChangeListener() {
@@ -46,6 +47,17 @@ class VideoController {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 Log.d(TAG, "surfaceCreated");
+                if (mFilePath != null) {
+                    MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+                    retriever.setDataSource(mFilePath);
+
+                    logMetaData(retriever);
+
+                    int width = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+                    int height = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+                    int rotation = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
+                    mViewController.setSurfaceViewSize(width, height, rotation);
+                }
             }
 
             @Override
@@ -92,6 +104,10 @@ class VideoController {
             @Override
             public boolean onTouch(View aView, MotionEvent aMotionEvent) {
                 Log.d(TAG, "onTouch");
+
+                if (aMotionEvent.getPointerCount() != 1) {
+                    return false;
+                }
 
                 switch (aMotionEvent.getAction()) {
                     case MotionEvent.ACTION_DOWN:
@@ -165,15 +181,7 @@ class VideoController {
      */
     void setVideoPath(String aPath) {
         mFilePath = aPath;
-        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(aPath);
-
-        logMetaData(retriever);
-
-        int width = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
-        int height = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-        int rotation = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
-        mViewController.setSurfaceViewSize(width, height, rotation);
+        mViewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
     }
 
     /**
@@ -266,12 +274,7 @@ class VideoController {
     void videoForward() {
         Log.d(TAG, "videoForward");
         if (mThread.isAlive()) {
-            try {
-                Log.d(TAG, "join");
-                mThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            return;
         }
         if (mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED) {
             mPlayer.setStatus(VideoRunnable.STATUS.FORWARD);
@@ -286,12 +289,7 @@ class VideoController {
     void videoBackward() {
         Log.d(TAG, "videoBackward");
         if (mThread.isAlive()) {
-            try {
-                Log.d(TAG, "join");
-                mThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            return;
         }
         mPlayer.backward();
         mPlayer.setStatus(VideoRunnable.STATUS.BACKWARD);
