@@ -218,9 +218,7 @@ public class VideoSurfaceView extends SurfaceView {
         int bottom = mDisplayCenter.y + (height / 2) + mMoveY;
         Log.d(TAG, "(l, t, r, b) : (" + left + ", " + top + ", " + right + ", " + bottom + ")");
 
-        mCanChangeLayout = true;
-        this.layout(left, top, right, bottom);
-        mCanChangeLayout = false;
+        limit(left, top, right, bottom);
     }
 
     /**
@@ -231,6 +229,7 @@ public class VideoSurfaceView extends SurfaceView {
      */
     private void move(int aMoveX, int aMoveY) {
         Log.d(TAG, "move(" + aMoveX + ", " + aMoveY + ")");
+
         mMoveX += aMoveX;
         mMoveY += aMoveY;
 
@@ -238,6 +237,71 @@ public class VideoSurfaceView extends SurfaceView {
         int top = this.getTop() + aMoveY;
         int right = this.getRight() + aMoveX;
         int bottom = this.getBottom() + aMoveY;
+
+        limit(left, top, right, bottom);
+    }
+
+    /**
+     * limit
+     *
+     * @param left   setting value of left
+     * @param top    setting value of top
+     * @param right  setting value of right
+     * @param bottom setting value of bottom
+     */
+    private void limit(int left, int top, int right, int bottom) {
+        Log.d(TAG, "limit");
+        // 横位置の限界を設定
+        int displayWidth = mDisplayCenter.x * 2;
+        int movieWidth = right - left;
+        if (movieWidth < displayWidth) {
+            if (left < 0) {
+                mMoveX -= left;
+                right -= left;
+                left = 0;
+            } else if (right > displayWidth) {
+                mMoveX -= right - displayWidth;
+                left -= right - displayWidth;
+                right = displayWidth;
+            }
+        } else if (movieWidth > displayWidth) {
+            if (left > 0) {
+                mMoveX -= left;
+                right -= left;
+                left = 0;
+            } else if (right < displayWidth) {
+                mMoveX += displayWidth - right;
+                left += displayWidth - right;
+                right = displayWidth;
+            }
+        }
+
+        // 縦位置の限界を設定
+        int displayHeight = mDisplayCenter.y * 2;
+        int movieHeight = bottom - top;
+        if (movieHeight < displayHeight) {
+            if (top < 0) {
+                mMoveY -= top;
+                bottom -= top;
+                top = 0;
+            } else if (bottom > displayHeight) {
+                mMoveY -= bottom - displayHeight;
+                top -= bottom - displayHeight;
+                bottom = displayHeight;
+            }
+        } else if (movieHeight > displayHeight) {
+            if (top > 0) {
+                mMoveY -= top;
+                bottom -= top;
+                top = 0;
+            } else if (bottom < displayHeight) {
+                mMoveY += displayHeight - bottom;
+                top += displayHeight - bottom;
+                bottom = displayHeight;
+            }
+        }
+
+        Log.d(TAG, "(l, t, r, b) : (" + left + ", " + top + ", " + right + ", " + bottom + ")");
 
         mCanChangeLayout = true;
         this.layout(left, top, right, bottom);
