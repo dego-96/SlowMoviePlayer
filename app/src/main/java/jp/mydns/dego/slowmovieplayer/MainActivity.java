@@ -186,14 +186,14 @@ public class MainActivity extends AppCompatActivity {
      */
     private void requestGalleryResult(int aResultCode, Intent aData) {
         Log.d(TAG, "requestGalleryResult");
-        String video_path = "";
         if (aResultCode == Activity.RESULT_OK) {
-            video_path = getPathFromUri(aData);
-            mVideoController.setVideoPath(video_path);
-            Log.d(TAG, "video path :" + video_path);
-        }
-        if ("".equals(video_path)) {
-            Toast.makeText(getApplication(), getString(R.string.toast_no_video), Toast.LENGTH_SHORT).show();
+            String video_path = getPathFromUri(aData);
+            if (video_path == null || "".equals(video_path)) {
+                Toast.makeText(getApplication(), getString(R.string.toast_no_video), Toast.LENGTH_SHORT).show();
+            } else {
+                mVideoController.setVideoPath(video_path);
+                Log.d(TAG, "video path :" + video_path);
+            }
         }
     }
 
