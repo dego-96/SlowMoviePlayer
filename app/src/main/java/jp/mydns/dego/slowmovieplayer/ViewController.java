@@ -5,7 +5,6 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.graphics.Point;
-import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.widget.ImageView;
@@ -21,7 +20,7 @@ import java.util.Locale;
 
 class ViewController {
 
-    private static final String TAG = "ViewController";
+//    private static final String TAG = "ViewController";
     private static final int ANIMATOR_DURATION = 300;
 
     private final static SimpleDateFormat sDateFormat = new SimpleDateFormat("mm:ss:SSS", Locale.JAPAN);
@@ -54,7 +53,6 @@ class ViewController {
      * @param aActivity main activity
      */
     ViewController(Activity aActivity) {
-        Log.d(TAG, "ViewController");
 
         mActivity = aActivity;
 
@@ -97,14 +95,12 @@ class ViewController {
      */
     @SuppressWarnings("noinspection")
     void setSurfaceViewSize(int aVideoWidth, int aVideoHeight, int aRotation) {
-        Log.d(TAG, "setSurfaceViewSize");
 
         Point point = new Point();
         Display display = mActivity.getWindowManager().getDefaultDisplay();
         display.getSize(point);
         int displayWidth = point.x;
         int displayHeight = point.y;
-        Log.d(TAG, "display size : (" + displayWidth + ", " + displayHeight + ")");
 
         int width;
         int height;
@@ -140,7 +136,6 @@ class ViewController {
      * @param aStatus video status
      */
     void setVisibility(VideoRunnable.STATUS aStatus) {
-        Log.d(TAG, "setVisibility( " + aStatus.name() + " )");
         switch (aStatus) {
             case INIT:
                 mSurfaceView.setVisibility(View.GONE);
@@ -195,7 +190,6 @@ class ViewController {
                 mRemainTimeTextView.setVisibility(View.VISIBLE);
                 break;
             default:
-                Log.e(TAG, "invalid player status :" + aStatus);
                 break;
         }
     }
@@ -206,7 +200,6 @@ class ViewController {
      * @param aProgress progress
      */
     void setProgress(int aProgress) {
-        Log.d(TAG, "setProgress (" + aProgress + ")");
         mSeekBar.setProgress(aProgress);
 
         mCurrentTimeTextView.setText(sDateFormat.format(new Date(aProgress)));
@@ -224,7 +217,6 @@ class ViewController {
      * @param aDuration video duration
      */
     void setDuration(int aDuration) {
-        Log.d(TAG, "setDuration (" + aDuration + ")");
         mSeekBar.setMax(aDuration);
 
         mRemainTimeTextView.setText(sDateFormat.format(new Date(aDuration)));
@@ -236,7 +228,6 @@ class ViewController {
      * @param aSpeed playback speed (-4, -2, 0, 2, 4)
      */
     void setPlaybackSpeed(int aSpeed) {
-        Log.d(TAG, "setPlaybackSpeed");
         switch (aSpeed) {
             case -4:
                 mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x1_4));
@@ -262,7 +253,6 @@ class ViewController {
      * animFullscreenPreview
      */
     void animFullscreenPreview() {
-        Log.d(TAG, "fullScreenAnimationStart");
 
         float toX, fromX, toY, fromY;
         List<Animator> animatorList = new ArrayList<>();
