@@ -69,6 +69,7 @@ class VideoController {
                             mPlayer.getStatus() == VideoRunnable.STATUS.VIDEO_SELECTED) {
                         mPlayer.init(mFilePath, holder.getSurface());
                         mViewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
+                        mViewController.setPlaybackSpeed(mPlayer.getSpeed());
                         mThread = new Thread(mPlayer);
                         mThread.start();
                     }

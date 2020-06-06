@@ -13,12 +13,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-//    private static final String TAG = "MainActivity";
+    private static final String TAG = "MainActivity";
     private static final int REQUEST_PERMISSION_READ_EXTERNAL_STORAGE = 10;
     private static final int REQUEST_GALLERY = 20;
 
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     protected void onCreate(Bundle aSavedInstanceState) {
+        Log.d(TAG, "onCreate");
         super.onCreate(aSavedInstanceState);
         setContentView(R.layout.activity_main);
         initialize();
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     protected void onResume() {
+        Log.d(TAG, "onResume");
         super.onResume();
         checkExternalStorageAccess();
     }
@@ -53,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
      * @param aView button view
      */
     public void onVideoSelectButtonClicked(View aView) {
+        Log.d(TAG, "onVideoSelectButtonClicked");
         if (mCanReadExternalStorage) {
             Intent intentGallery;
             intentGallery = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -70,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
      * @param aView button view
      */
     public void onPlayButtonClicked(View aView) {
+        Log.d(TAG, "onPlayButtonClicked");
         mVideoController.videoPlayback();
     }
 
@@ -79,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
      * @param aView button view
      */
     public void onStopButtonClicked(View aView) {
+        Log.d(TAG, "onStopButtonClicked");
         mVideoController.videoStop();
     }
 
@@ -88,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
      * @param aView button view
      */
     public void onForwardButtonClicked(View aView) {
+        Log.d(TAG, "onForwardButtonClicked");
         mVideoController.videoForward();
     }
 
@@ -97,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
      * @param aView button view
      */
     public void onBackwardButtonClicked(View aView) {
+        Log.d(TAG, "onBackwardButtonClicked");
         mVideoController.videoBackward();
     }
 
@@ -106,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
      * @param aView button view
      */
     public void onSpeedUpButtonClicked(View aView) {
+        Log.d(TAG, "onSpeedUpButtonClicked");
         mVideoController.videoSpeedUp();
     }
 
@@ -115,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
      * @param aView button view
      */
     public void onSpeedDownButtonClicked(View aView) {
+        Log.d(TAG, "onSpeedDownButtonClicked");
         mVideoController.videoSpeedDown();
     }
 
@@ -127,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     protected void onActivityResult(int aRequestCode, int aResultCode, Intent aData) {
+        Log.d(TAG, "onActivityResult");
         super.onActivityResult(aRequestCode, aResultCode, aData);
         switch (aRequestCode) {
             case REQUEST_PERMISSION_READ_EXTERNAL_STORAGE:
@@ -138,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
 
             default:
+                Log.w(TAG, "unknown request code");
                 break;
         }
     }
@@ -148,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
      * @param aResultCode intent request code
      */
     private void requestPermission(int aResultCode) {
+        Log.d(TAG, "requestPermission");
         if (aResultCode != Activity.RESULT_OK) {
             return;
         }
@@ -172,12 +185,14 @@ public class MainActivity extends AppCompatActivity {
      * @param aData       intent received data
      */
     private void requestGalleryResult(int aResultCode, Intent aData) {
+        Log.d(TAG, "requestGalleryResult");
         if (aResultCode == Activity.RESULT_OK) {
             String video_path = getPathFromUri(aData);
             if (video_path == null || "".equals(video_path)) {
                 Toast.makeText(getApplication(), getString(R.string.toast_no_video), Toast.LENGTH_SHORT).show();
             } else {
                 mVideoController.setVideoPath(video_path);
+                Log.d(TAG, "video path :" + video_path);
             }
         }
     }
@@ -186,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
      * initialize
      */
     private void initialize() {
+        Log.d(TAG, "initialize");
         mVideoController = new VideoController(this);
         mCanReadExternalStorage = false;
     }
@@ -194,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
      * checkExternalStorageAccess
      */
     private void checkExternalStorageAccess() {
+        Log.d(TAG, "checkExternalStorageAccess");
         int permission = ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
@@ -216,16 +233,19 @@ public class MainActivity extends AppCompatActivity {
      * @return path
      */
     private String getPathFromUri(Intent aData) {
+        Log.d(TAG, "getPathFromUri");
         if (!mCanReadExternalStorage) {
+            Log.e(TAG, "can not read external storage");
             return null;
         }
 
         Uri uri = aData.getData();
         if (uri == null) {
+            Log.e(TAG, "uri is null");
             return null;
         }
 
-        String path;
+        String path = null;
         int takeFlags = aData.getFlags();
         takeFlags &= Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
 
@@ -245,8 +265,9 @@ public class MainActivity extends AppCompatActivity {
             path = cursor.getString(cursor.getColumnIndex(column[0]));
             cursor.close();
         } else {
-            return null;
+            Log.e(TAG, "cursor is null");
         }
+        Log.d(TAG, "path: " + path);
         return path;
     }
 }
