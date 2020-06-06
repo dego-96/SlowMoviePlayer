@@ -251,23 +251,29 @@ public class MainActivity extends AppCompatActivity {
 
         getContentResolver().takePersistableUriPermission(uri, takeFlags);
         String wholeID = DocumentsContract.getDocumentId(uri);
-        String id = wholeID.split(":")[1];
-        String[] column = {MediaStore.Video.Media.DATA};
-        String sel = MediaStore.Video.Media._ID + "=?";
-        Cursor cursor = getContentResolver().query(
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                column,
-                sel,
-                new String[]{id},
-                null
-        );
-        if (cursor != null && cursor.moveToFirst()) {
-            path = cursor.getString(cursor.getColumnIndex(column[0]));
-            cursor.close();
+        if (wholeID.contains(":")) {
+            String id = wholeID.split(":")[1];
+            String[] column = {MediaStore.Video.Media.DATA};
+            String sel = MediaStore.Video.Media._ID + "=?";
+            Cursor cursor = getContentResolver().query(
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                    column,
+                    sel,
+                    new String[]{id},
+                    null
+            );
+            if (cursor != null && cursor.moveToFirst()) {
+                path = cursor.getString(cursor.getColumnIndex(column[0]));
+                cursor.close();
+            } else {
+                Log.e(TAG, "cursor is null");
+            }
+            Log.d(TAG, "path: " + path);
+            return path;
+        } else if (wholeID.contains("/")) {
+            return wholeID;
         } else {
-            Log.e(TAG, "cursor is null");
+            return null;
         }
-        Log.d(TAG, "path: " + path);
-        return path;
     }
 }
