@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+
+    <link rel="stylesheet" href="github-markdown.css">
+
+    <!-- <script src="http://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>   -->
+    <script src="marked.min.js"></script>
+
+<script>
+'use strict';
+
+(function () {
+var markdownText = (function () {/*/
+
+<!--- ----------------------------------------
+マークダウン開始
+----------------------------------------- --->
+
+# SlowMoviePlayer プライバシーポリシー
+
+## 情報を取得するアプリ提供者
+dego-96（個人開発者）
+
+## 取得する情報と目的
+本アプリケーションは動画を再生することのみを目的として端末から情報を取得します。
+取得した情報に個人を特定可能なユーザ情報が含まれていたとしても、これをサーバに送信するなど、動画再生以外の目的で使用することはありません。
+
+## 通知・公表または同意取得の方法・利用者関与の方法
+
+（１）通知・公表
+本ポリシーは本アプリケーションのホームページに掲載する方法で行います。
+
+（２）同意取得の方法
+同意の取得は、本アプリケーションの起動時に取得する方法で行います。
+
+（３）利用者関与の方法
+ユーザー情報の取得は、本アプリケーションをアンインストールすることで中止することができます。
+
+## 外部送信・第三者提供・情報収集モジュール
+
+（１）外部送信
+本アプリケーションでは取得した情報を外部に送信することはありません。
+
+（２）第三者提供
+取得した情報について、以下の場合第三者に提供することがあります。
+・法令に基づき開示・提供を求められた場合
+
+（３）情報収集モジュール
+本アプリケーションには情報収集モジュールは組み込まれていません。
+
+## お問い合わせ
+本ポリシーに関する、ご意見、ご質問、苦情の申出その他ユーザー情報の取扱いに関するお問い合わせは、以下の窓口にご連絡ください。
+
+dego.project@gmail.com
+
+## 改定
+本アプリケーションは個人で開発・運用しているため、開発者個人の裁量に基づいて、本ポリシーを変更することがあります。
+但し、取得するユーザー情報、利用目的、第三者提供に変更が発生した場合、本アプリケーションまたはホームページで通知するとともに、本ポリシー変更後、本アプリケーションの初回起動時に改めてユーザーから同意を取得します。
+
+## 改定日・制定日
+制定：2020年06月08日
+
+
+<!--- ----------------------------------------
+マークダウン終了
+----------------------------------------------
+・JavaScriptを使用しているため、上記のマークダウンでは次の制限があります
+  ・[*]の前後に[/]が付く表現は誤動作するので
+    [%*][*%][%*%]として表現してください。
+    (実際には後方にスラッシュが付くもので誤動作しますが
+    何にせよ[*]と[/]の組み合わせは使わない方がよいです)
+  ・script終了タグを記入すると誤動作するので
+    [<%script>]と表現してください。
+----------------------------------------- --->
+
+/*/}).toString();
+
+  markdownText = markdownText.split('/*/')[1];
+
+  var replaceAll = function(str, before, after) {
+    var result = str
+    do {
+      str = result;
+      result = str.replace(before, after);
+    } while (str !== result);
+      return result;
+  };
+
+  markdownText = replaceAll(markdownText, '%*', '/*');
+  markdownText = replaceAll(markdownText, '*%', '*%');
+  markdownText = replaceAll(markdownText, '%script', '/script');
+
+  markdownText = marked(markdownText);
+
+  window.onload = function(){
+      document.body.innerHTML += markdownText;
+  };
+}())
+
+</script>
+  </head>
+  <body>
+  </body>
+</html>
