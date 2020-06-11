@@ -143,8 +143,8 @@
             <!-- Speed Down -->
             <ImageView
                 android:id="@+id/button_speed_down"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_speed_down"
@@ -160,8 +160,8 @@
             <!-- Stop -->
             <ImageView
                 android:id="@+id/button_stop"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_stop"
@@ -172,14 +172,13 @@
             <Space
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
                 android:layout_weight="1" />
 
             <!-- Play/Pause -->
             <ImageView
                 android:id="@+id/button_play"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_play"
@@ -195,8 +194,8 @@
             <!-- Speed Up -->
             <ImageView
                 android:id="@+id/button_speed_up"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
                 android:layout_margin="10dp"
                 android:clickable="false"
                 android:contentDescription="@string/content_button_speed_up"
