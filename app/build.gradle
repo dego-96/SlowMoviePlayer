@@ -7,7 +7,7 @@ android {
         applicationId "jp.mydns.dego.slowmovieplayer"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 2
+        versionCode 3
         versionName var
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
