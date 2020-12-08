@@ -10,8 +10,12 @@ import android.widget.SeekBar;
 
 class VideoController {
 
+    public enum MANIPULATION {
+        EXPAND_CONTRACT,
+        FRAME_CONTROL
+    }
+
     private static final String TAG = "VideoController";
-    private static final int TOUCH_DETECT_TIME_MAX = 200;
     private static final int TOUCH_X_DIFF_SIZE = 50;
 
     private ViewController mViewController;
@@ -22,6 +26,7 @@ class VideoController {
     private float mTouchStartX;
     private int mTouchXDiffLevel;
     private int mTouchXDiffLevelLast;
+    private MANIPULATION mManipulation;
 
     /**
      * VideoController
@@ -34,6 +39,10 @@ class VideoController {
         mViewController.setVisibility(VideoRunnable.STATUS.INIT);
         mPlayer = new VideoRunnable(new VideoPlayerHandler(mViewController));
 
+        mTouchDownTime = 0;
+        mManipulation = MANIPULATION.EXPAND_CONTRACT;
+        mViewController.setManipulation(mManipulation);
+
         mPlayer.setOnVideoStatusChangeListener(new OnVideoStatusChangeListener() {
             @Override
             public void onDurationChanged(int duration) {
@@ -42,7 +51,7 @@ class VideoController {
             }
         });
 
-        VideoSurfaceView surfaceView = (VideoSurfaceView) mViewController.getView(R.id.player_surface_view);
+        final VideoSurfaceView surfaceView = (VideoSurfaceView) mViewController.getView(R.id.player_surface_view);
         surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
@@ -102,30 +111,51 @@ class VideoController {
             }
         });
         surfaceView.setOnTouchListener(new View.OnTouchListener() {
+
             @Override
             public boolean onTouch(View aView, MotionEvent aMotionEvent) {
                 Log.d(TAG, "onTouch");
-
-                if (aMotionEvent.getPointerCount() != 1) {
+                if (!(aView instanceof VideoSurfaceView)) {
                     return false;
                 }
 
-                switch (aMotionEvent.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        Log.d(TAG, "ACTION_DOWN");
-                        mTouchDownTime = System.nanoTime() / 1000 / 1000;
+                // video pause
+                videoPause();
+
+                // click animation
+                if (aMotionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                    mTouchDownTime = System.nanoTime() / 1000 / 1000;
+                } else if (aMotionEvent.getAction() == MotionEvent.ACTION_UP) {
+                    long diffTime = System.nanoTime() / 1000 / 1000 - mTouchDownTime;
+                    if (diffTime < 100) {
+                        aView.performClick();
+                        mViewController.animFullscreenPreview();
+                        return true;
+                    }
+                }
+
+                // touch process
+                if (mManipulation == MANIPULATION.EXPAND_CONTRACT) {
+                    if (aMotionEvent.getPointerCount() == 1) {
+                        Log.d(TAG, "move");
+                        ((VideoSurfaceView) aView).move(aMotionEvent);
+                    } else if (aMotionEvent.getPointerCount() == 2) {
+                        Log.d(TAG, "scale");
+                        ((VideoSurfaceView) aView).setGestureMotionEvent(aMotionEvent);
+                    }
+                } else if (mManipulation == MANIPULATION.FRAME_CONTROL &&
+                        aMotionEvent.getPointerCount() == 1) {
+                    if (aMotionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                         mTouchStartX = aMotionEvent.getX();
                         mTouchXDiffLevel = 0;
                         mTouchXDiffLevelLast = 0;
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        Log.d(TAG, "ACTION_MOVE");
-                        float touchX = aMotionEvent.getX();
-                        int diffX = (int) (touchX - mTouchStartX);
+                    } else if (aMotionEvent.getAction() == MotionEvent.ACTION_MOVE) {
+                        int diffX = (int) (aMotionEvent.getX() - mTouchStartX);
                         Log.d(TAG, "diff x : " + diffX);
 
                         mTouchXDiffLevel = diffX / TOUCH_X_DIFF_SIZE;
-                        if (mPlayer != null && mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED &&
+                        if (mPlayer != null &&
+                                mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED &&
                                 mTouchXDiffLevelLast != mTouchXDiffLevel) {
                             if (mTouchXDiffLevelLast < mTouchXDiffLevel) {
                                 videoForward();
@@ -136,17 +166,7 @@ class VideoController {
                             }
                             mTouchXDiffLevelLast = mTouchXDiffLevel;
                         }
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        Log.d(TAG, "ACTION_UP");
-                        aView.performClick();
-                        if (mPlayer != null &&
-                                mPlayer.getStatus() != VideoRunnable.STATUS.INIT &&
-                                (System.nanoTime() / 1000 / 1000) - mTouchDownTime < TOUCH_DETECT_TIME_MAX) {
-                            Log.d(TAG, "player status :" + mPlayer.getStatus().name());
-                            mViewController.animFullscreenPreview();
-                        }
-                        break;
+                    }
                 }
                 return true;
             }
@@ -350,6 +370,16 @@ class VideoController {
         }
         mViewController.setPlaybackSpeed(speed);
         mPlayer.setSpeed(speed);
+    }
+
+    /**
+     * setManipulation
+     *
+     * @param aManipulation 操作モード
+     */
+    void setManipulation(MANIPULATION aManipulation) {
+        mManipulation = aManipulation;
+        mViewController.setManipulation(mManipulation);
     }
 
     /**

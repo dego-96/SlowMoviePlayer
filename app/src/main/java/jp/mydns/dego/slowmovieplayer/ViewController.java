@@ -39,6 +39,8 @@ class ViewController {
     private ImageView mStopImageView;
     private ImageView mSpeedUpImageView;
     private ImageView mSpeedDownImageView;
+    private ImageView mExpandImageView;
+    private ImageView mFrameControlImageView;
     private SeekBar mSeekBar;
     private TextView mPlaybackSpeedTextView;
     private TextView mCurrentTimeTextView;
@@ -67,6 +69,8 @@ class ViewController {
         mStopImageView = aActivity.findViewById(R.id.button_stop);
         mSpeedUpImageView = aActivity.findViewById(R.id.button_speed_up);
         mSpeedDownImageView = aActivity.findViewById(R.id.button_speed_down);
+        mExpandImageView = aActivity.findViewById(R.id.button_expand_contract);
+        mFrameControlImageView = aActivity.findViewById(R.id.button_frame_control);
         mSeekBar = aActivity.findViewById(R.id.seek_bar_progress);
         mPlaybackSpeedTextView = aActivity.findViewById(R.id.text_view_speed);
         mCurrentTimeTextView = aActivity.findViewById(R.id.text_view_current_time);
@@ -152,6 +156,8 @@ class ViewController {
                 mStopImageView.setVisibility(View.GONE);
                 mSpeedUpImageView.setVisibility(View.GONE);
                 mSpeedDownImageView.setVisibility(View.GONE);
+                mExpandImageView.setVisibility(View.GONE);
+                mFrameControlImageView.setVisibility(View.GONE);
                 mSeekBar.setVisibility(View.GONE);
                 mPlaybackSpeedTextView.setVisibility(View.GONE);
                 mCurrentTimeTextView.setVisibility(View.GONE);
@@ -168,6 +174,8 @@ class ViewController {
                 mStopImageView.setVisibility(View.VISIBLE);
                 mSpeedUpImageView.setVisibility(View.INVISIBLE);
                 mSpeedDownImageView.setVisibility(View.INVISIBLE);
+                mExpandImageView.setVisibility(View.INVISIBLE);
+                mFrameControlImageView.setVisibility(View.INVISIBLE);
                 mSeekBar.setVisibility(View.VISIBLE);
                 mPlaybackSpeedTextView.setVisibility(View.VISIBLE);
                 mCurrentTimeTextView.setVisibility(View.VISIBLE);
@@ -189,6 +197,8 @@ class ViewController {
                 mStopImageView.setVisibility(View.VISIBLE);
                 mSpeedUpImageView.setVisibility(View.VISIBLE);
                 mSpeedDownImageView.setVisibility(View.VISIBLE);
+                mExpandImageView.setVisibility(View.VISIBLE);
+                mFrameControlImageView.setVisibility(View.VISIBLE);
                 mSeekBar.setVisibility(View.VISIBLE);
                 mPlaybackSpeedTextView.setVisibility(View.VISIBLE);
                 mCurrentTimeTextView.setVisibility(View.VISIBLE);
@@ -259,6 +269,23 @@ class ViewController {
     }
 
     /**
+     * setManipulation
+     *
+     * @param aManipulation 操作モード
+     */
+    void setManipulation(VideoController.MANIPULATION aManipulation)
+    {
+        if (aManipulation == VideoController.MANIPULATION.EXPAND_CONTRACT) {
+            mExpandImageView.setImageResource(R.drawable.expand_en);
+            mFrameControlImageView.setImageResource(R.drawable.frame_control);
+        }
+        else if (aManipulation == VideoController.MANIPULATION.FRAME_CONTROL) {
+            mExpandImageView.setImageResource(R.drawable.expand);
+            mFrameControlImageView.setImageResource(R.drawable.frame_control_en);
+        }
+    }
+
+    /**
      * animFullscreenPreview
      */
     void animFullscreenPreview() {
@@ -287,17 +314,23 @@ class ViewController {
         ObjectAnimator animatorTrans_Forward = ObjectAnimator.ofFloat(mForwardImageView, "translationX", fromX, toX);
         ObjectAnimator animatorTrans_Backward = ObjectAnimator.ofFloat(mBackwardImageView, "translationX", -1.0f * fromX, -1.0f * toX);
         ObjectAnimator animatorTrans_Gallery = ObjectAnimator.ofFloat(mGalleryImageView, "translationY", -1.0f * fromY, -1.0f * toY);
+        ObjectAnimator animatorTrans_ExpandContract = ObjectAnimator.ofFloat(mExpandImageView, "translationX", fromX, toX);
+        ObjectAnimator animatorTrans_FrameControl = ObjectAnimator.ofFloat(mFrameControlImageView, "translationX", fromX, toX);
 
         animatorTrans_Buttons.setDuration(ANIMATOR_DURATION);
         animatorTrans_SeekBar.setDuration(ANIMATOR_DURATION);
         animatorTrans_Forward.setDuration(ANIMATOR_DURATION);
         animatorTrans_Backward.setDuration(ANIMATOR_DURATION);
         animatorTrans_Gallery.setDuration(ANIMATOR_DURATION);
+        animatorTrans_ExpandContract.setDuration(ANIMATOR_DURATION);
+        animatorTrans_FrameControl.setDuration(ANIMATOR_DURATION);
         animatorList.add(animatorTrans_Buttons);
         animatorList.add(animatorTrans_SeekBar);
         animatorList.add(animatorTrans_Forward);
         animatorList.add(animatorTrans_Backward);
         animatorList.add(animatorTrans_Gallery);
+        animatorList.add(animatorTrans_ExpandContract);
+        animatorList.add(animatorTrans_FrameControl);
 
         AnimatorSet animatorSet = new AnimatorSet();
         animatorSet.playTogether(animatorList);

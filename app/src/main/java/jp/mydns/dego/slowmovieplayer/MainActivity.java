@@ -129,6 +129,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * onExpandButtonClicked
+     *
+     * @param aView button view
+     */
+    public void onExpandButtonClicked(View aView) {
+        Log.d(TAG, "onExpandButtonClicked");
+        mVideoController.setManipulation(VideoController.MANIPULATION.EXPAND_CONTRACT);
+    }
+
+    /**
+     * onFrameControlButtonClicked
+     *
+     * @param aView button view
+     */
+    public void onFrameControlButtonClicked(View aView) {
+        Log.d(TAG, "onFrameControlButtonClicked");
+        mVideoController.setManipulation(VideoController.MANIPULATION.FRAME_CONTROL);
+    }
+
+    /**
      * onActivityResult
      *
      * @param aRequestCode request code

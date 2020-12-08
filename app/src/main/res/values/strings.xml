@@ -9,6 +9,8 @@
     <string name="content_button_speed_down">Speed Down</string>
     <string name="content_button_play">Play</string>
     <string name="content_button_stop">Stop</string>
+    <string name="content_button_expand_contract">Mode Expand/Contract</string>
+    <string name="content_button_frame_control">Mode Frame Control</string>
     <string name="no_video">No Video</string>
     <string name="playback_speed_init">x1.0</string>
     <string name="current_time_init">00:00:000</string>

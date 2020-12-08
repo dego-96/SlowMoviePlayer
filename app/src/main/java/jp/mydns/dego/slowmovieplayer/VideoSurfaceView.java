@@ -24,9 +24,10 @@ public class VideoSurfaceView extends SurfaceView {
     private boolean mCanChangeLayout;
     private Display mDisplay;
     private Point mDisplayCenter;
-    private Point mCenterPointStart;
+    private Point mMoveStart;
     private int mMoveX;
     private int mMoveY;
+    private boolean mIsMove;
 
     /**
      * VideoSurfaceView
@@ -77,35 +78,54 @@ public class VideoSurfaceView extends SurfaceView {
     }
 
     /**
-     * onTouchEvent
+     * setGestureMotionEvent
      *
      * @param aEvent motion event
-     * @return touch result
      */
-    @Override
-    public boolean onTouchEvent(MotionEvent aEvent) {
-        Log.d(TAG, "onTouchEvent");
-        super.performClick();
-        int pointerCount = aEvent.getPointerCount();
-        if (pointerCount == 2) {
-            mScaleGestureDetector.onTouchEvent(aEvent);
-        } else if (pointerCount == 3) {
-            int action = aEvent.getActionMasked();
-            float x = (aEvent.getX(0) + aEvent.getX(1) + aEvent.getX(2)) / 3.0f;
-            float y = (aEvent.getY(0) + aEvent.getY(1) + aEvent.getY(2)) / 3.0f;
-            if (action == MotionEvent.ACTION_POINTER_DOWN) {
-                mCenterPointStart = new Point((int) x, (int) y);
-            } else if (action == MotionEvent.ACTION_POINTER_UP) {
-                mCenterPointStart = null;
-            } else {
-                move((int) x - mCenterPointStart.x, (int) y - mCenterPointStart.y);
-            }
-
-            aEvent.getX(0);
-        }
-        return true;
+    void setGestureMotionEvent(MotionEvent aEvent)
+    {
+        Log.d(TAG, "setGestureMotionEvent");
+        mIsMove = false;
+        mScaleGestureDetector.onTouchEvent(aEvent);
     }
 
+    /**
+     * move
+     *
+     * @param aEvent Motion Event
+     */
+    void move(MotionEvent aEvent) {
+        int x = (int) aEvent.getX();
+        int y = (int) aEvent.getY();
+        if (aEvent.getAction() == MotionEvent.ACTION_DOWN) {
+            mIsMove = true;
+            mMoveStart = new Point(x, y);
+        } else if (aEvent.getAction() == MotionEvent.ACTION_UP) {
+            mMoveStart = null;
+            mIsMove = false;
+        } else if (mIsMove && aEvent.getAction() == MotionEvent.ACTION_MOVE) {
+            int dx = x - mMoveStart.x;
+            int dy = y - mMoveStart.y;
+            mMoveX += dx;
+            mMoveY += dy;
+
+            int left = this.getLeft() + dx;
+            int top = this.getTop() + dy;
+            int right = this.getRight() + dx;
+            int bottom = this.getBottom() + dy;
+
+            limit(left, top, right, bottom);
+        }
+    }
+
+    /**
+     * layout
+     *
+     * @param l left
+     * @param t top
+     * @param r right
+     * @param b bottom
+     */
     @Override
     public void layout(int l, int t, int r, int b) {
         Log.d(TAG, "layout(" + l + ", " + t + ", " + r + ", " + b + ")");
@@ -175,6 +195,7 @@ public class VideoSurfaceView extends SurfaceView {
         mCanChangeLayout = true;
         mMoveX = 0;
         mMoveY = 0;
+        mIsMove = false;
 
         if (aContext instanceof Activity) {
             mDisplay = ((Activity) aContext).getWindowManager().getDefaultDisplay();
@@ -222,26 +243,6 @@ public class VideoSurfaceView extends SurfaceView {
     }
 
     /**
-     * move
-     *
-     * @param aMoveX move x
-     * @param aMoveY move y
-     */
-    private void move(int aMoveX, int aMoveY) {
-        Log.d(TAG, "move(" + aMoveX + ", " + aMoveY + ")");
-
-        mMoveX += aMoveX;
-        mMoveY += aMoveY;
-
-        int left = this.getLeft() + aMoveX;
-        int top = this.getTop() + aMoveY;
-        int right = this.getRight() + aMoveX;
-        int bottom = this.getBottom() + aMoveY;
-
-        limit(left, top, right, bottom);
-    }
-
-    /**
      * limit
      *
      * @param left   setting value of left
@@ -254,7 +255,7 @@ public class VideoSurfaceView extends SurfaceView {
         // 横位置の限界を設定
         int displayWidth = mDisplayCenter.x * 2;
         int movieWidth = right - left;
-        if (movieWidth < displayWidth) {
+        if (movieWidth <= displayWidth) {
             if (left < 0) {
                 mMoveX -= left;
                 right -= left;
@@ -264,7 +265,8 @@ public class VideoSurfaceView extends SurfaceView {
                 left -= right - displayWidth;
                 right = displayWidth;
             }
-        } else if (movieWidth > displayWidth) {
+        }
+        if (movieWidth >= displayWidth) {
             if (left > 0) {
                 mMoveX -= left;
                 right -= left;
@@ -279,7 +281,7 @@ public class VideoSurfaceView extends SurfaceView {
         // 縦位置の限界を設定
         int displayHeight = mDisplayCenter.y * 2;
         int movieHeight = bottom - top;
-        if (movieHeight < displayHeight) {
+        if (movieHeight <= displayHeight) {
             if (top < 0) {
                 mMoveY -= top;
                 bottom -= top;
@@ -289,7 +291,8 @@ public class VideoSurfaceView extends SurfaceView {
                 top -= bottom - displayHeight;
                 bottom = displayHeight;
             }
-        } else if (movieHeight > displayHeight) {
+        }
+        if (movieHeight >= displayHeight) {
             if (top > 0) {
                 mMoveY -= top;
                 bottom -= top;
