@@ -19,7 +19,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-class ViewController {
+import jp.mydns.dego.slowmovieplayer.VideoPlayer.VideoController;
+import jp.mydns.dego.slowmovieplayer.VideoPlayer.VideoRunnable;
+
+public class ViewController {
 
     private static final String TAG = "ViewController";
     private static final int ANIMATOR_DURATION = 300;
@@ -55,7 +58,7 @@ class ViewController {
      *
      * @param aActivity main activity
      */
-    ViewController(Activity aActivity) {
+    public ViewController(Activity aActivity) {
         Log.d(TAG, "ViewController");
 
         mActivity = aActivity;
@@ -88,7 +91,7 @@ class ViewController {
      * @param aId view id
      * @return view
      */
-    View getView(int aId) {
+    public View getView(int aId) {
         return mActivity.findViewById(aId);
     }
 
@@ -100,7 +103,7 @@ class ViewController {
      * @param aRotation    rotation
      */
     @SuppressWarnings("noinspection")
-    void setSurfaceViewSize(int aVideoWidth, int aVideoHeight, int aRotation) {
+    public void setSurfaceViewSize(int aVideoWidth, int aVideoHeight, int aRotation) {
         Log.d(TAG, "setSurfaceViewSize");
 
         Point point = new Point();
@@ -143,7 +146,7 @@ class ViewController {
      *
      * @param aStatus video status
      */
-    void setVisibility(VideoRunnable.STATUS aStatus) {
+    public void setVisibility(VideoRunnable.STATUS aStatus) {
         Log.d(TAG, "setVisibility( " + aStatus.name() + " )");
         switch (aStatus) {
             case INIT:
@@ -215,7 +218,7 @@ class ViewController {
      *
      * @param aProgress progress
      */
-    void setProgress(int aProgress) {
+    public void setProgress(int aProgress) {
         Log.d(TAG, "setProgress (" + aProgress + ")");
         mSeekBar.setProgress(aProgress);
 
@@ -233,7 +236,7 @@ class ViewController {
      *
      * @param aDuration video duration
      */
-    void setDuration(int aDuration) {
+    public void setDuration(int aDuration) {
         Log.d(TAG, "setDuration (" + aDuration + ")");
         mSeekBar.setMax(aDuration);
 
@@ -243,28 +246,21 @@ class ViewController {
     /**
      * setPlaybackSpeed
      *
-     * @param aSpeed playback speed (-4, -2, 0, 2, 4)
+     * @param speed playback speed
      */
-    void setPlaybackSpeed(int aSpeed) {
+    public void setPlaybackSpeedText(double speed) {
         Log.d(TAG, "setPlaybackSpeed");
-        switch (aSpeed) {
-            case -4:
-                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x1_4));
-                break;
-            case -2:
-                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x1_2));
-                break;
-            case 0:
-                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_init));
-                break;
-            case 2:
-                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x2_0));
-                break;
-            case 4:
-                mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x4_0));
-                break;
-            default:
-                break;
+
+        if (3.0 < speed) {
+            mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x4_0));
+        } else if (1.5 < speed) {
+            mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x2_0));
+        } else if (0.8 < speed) {
+            mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_init));
+        } else if (0.4 < speed) {
+            mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x1_2));
+        } else {
+            mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x1_4));
         }
     }
 
@@ -273,13 +269,11 @@ class ViewController {
      *
      * @param aManipulation 操作モード
      */
-    void setManipulation(VideoController.MANIPULATION aManipulation)
-    {
+    public void setManipulation(VideoController.MANIPULATION aManipulation) {
         if (aManipulation == VideoController.MANIPULATION.EXPAND_CONTRACT) {
             mExpandImageView.setImageResource(R.drawable.expand_en);
             mFrameControlImageView.setImageResource(R.drawable.frame_control);
-        }
-        else if (aManipulation == VideoController.MANIPULATION.FRAME_CONTROL) {
+        } else if (aManipulation == VideoController.MANIPULATION.FRAME_CONTROL) {
             mExpandImageView.setImageResource(R.drawable.expand);
             mFrameControlImageView.setImageResource(R.drawable.frame_control_en);
         }
@@ -288,7 +282,7 @@ class ViewController {
     /**
      * animFullscreenPreview
      */
-    void animFullscreenPreview() {
+    public void animFullscreenPreview() {
         Log.d(TAG, "fullScreenAnimationStart");
 
         float toX, fromX, toY, fromY;

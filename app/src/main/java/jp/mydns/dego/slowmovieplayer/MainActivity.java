@@ -17,6 +17,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import jp.mydns.dego.slowmovieplayer.VideoPlayer.VideoController;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";

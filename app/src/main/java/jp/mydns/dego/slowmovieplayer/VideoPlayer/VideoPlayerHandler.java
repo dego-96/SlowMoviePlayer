@@ -1,10 +1,12 @@
-package jp.mydns.dego.slowmovieplayer;
+package jp.mydns.dego.slowmovieplayer.VideoPlayer;
 
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
 import java.lang.ref.WeakReference;
+
+import jp.mydns.dego.slowmovieplayer.ViewController;
 
 public class VideoPlayerHandler extends Handler {
 

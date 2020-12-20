@@ -82,7 +82,7 @@ public class VideoSurfaceView extends SurfaceView {
      *
      * @param aEvent motion event
      */
-    void setGestureMotionEvent(MotionEvent aEvent)
+    public void setGestureMotionEvent(MotionEvent aEvent)
     {
         Log.d(TAG, "setGestureMotionEvent");
         mIsMove = false;
@@ -94,7 +94,7 @@ public class VideoSurfaceView extends SurfaceView {
      *
      * @param aEvent Motion Event
      */
-    void move(MotionEvent aEvent) {
+    public void move(MotionEvent aEvent) {
         int x = (int) aEvent.getX();
         int y = (int) aEvent.getY();
         if (aEvent.getAction() == MotionEvent.ACTION_DOWN) {

@@ -1,4 +1,4 @@
-package jp.mydns.dego.slowmovieplayer;
+package jp.mydns.dego.slowmovieplayer.VideoPlayer;
 
 import android.app.Activity;
 import android.media.MediaMetadataRetriever;
@@ -8,7 +8,11 @@ import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.SeekBar;
 
-class VideoController {
+import jp.mydns.dego.slowmovieplayer.R;
+import jp.mydns.dego.slowmovieplayer.VideoSurfaceView;
+import jp.mydns.dego.slowmovieplayer.ViewController;
+
+public class VideoController {
 
     public enum MANIPULATION {
         EXPAND_CONTRACT,
@@ -17,6 +21,8 @@ class VideoController {
 
     private static final String TAG = "VideoController";
     private static final int TOUCH_X_DIFF_SIZE = 50;
+    private static final double SPEED_MAX = 4.0;
+    private static final double SPEED_MIN = 1.0 / 4.0;
 
     private ViewController mViewController;
     private VideoRunnable mPlayer;
@@ -33,11 +39,12 @@ class VideoController {
      *
      * @param aActivity activity
      */
-    VideoController(final Activity aActivity) {
+    public VideoController(final Activity aActivity) {
         Log.d(TAG, "VideoController");
         mViewController = new ViewController(aActivity);
         mViewController.setVisibility(VideoRunnable.STATUS.INIT);
-        mPlayer = new VideoRunnable(new VideoPlayerHandler(mViewController));
+        mPlayer = VideoRunnable.getInstance();
+        mPlayer.setVideoHandler(new VideoPlayerHandler(mViewController));
 
         mTouchDownTime = 0;
         mManipulation = MANIPULATION.EXPAND_CONTRACT;
@@ -85,7 +92,7 @@ class VideoController {
                             mPlayer.getStatus() == VideoRunnable.STATUS.VIDEO_SELECTED) {
                         mPlayer.init(mFilePath, holder.getSurface());
                         mViewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
-                        mViewController.setPlaybackSpeed(mPlayer.getSpeed());
+                        mViewController.setPlaybackSpeedText(mPlayer.getSpeed());
                         mThread = new Thread(mPlayer);
                         mThread.start();
                     }
@@ -120,7 +127,13 @@ class VideoController {
                 }
 
                 // video pause
-                videoPause();
+                if (mPlayer != null &&
+                        mPlayer.getStatus() != VideoRunnable.STATUS.PAUSED &&
+                        mPlayer.getStatus() != VideoRunnable.STATUS.FORWARD &&
+                        mPlayer.getStatus() != VideoRunnable.STATUS.BACKWARD
+                ) {
+                    videoPause();
+                }
 
                 // click animation
                 if (aMotionEvent.getAction() == MotionEvent.ACTION_DOWN) {
@@ -149,19 +162,17 @@ class VideoController {
                         mTouchStartX = aMotionEvent.getX();
                         mTouchXDiffLevel = 0;
                         mTouchXDiffLevelLast = 0;
+                        Log.d(TAG, "Diff Level : " + mTouchXDiffLevelLast);
                     } else if (aMotionEvent.getAction() == MotionEvent.ACTION_MOVE) {
                         int diffX = (int) (aMotionEvent.getX() - mTouchStartX);
                         Log.d(TAG, "diff x : " + diffX);
 
                         mTouchXDiffLevel = diffX / TOUCH_X_DIFF_SIZE;
-                        if (mPlayer != null &&
-                                mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED &&
-                                mTouchXDiffLevelLast != mTouchXDiffLevel) {
+                        Log.d(TAG, "Diff Level : " + mTouchXDiffLevelLast + " => " + mTouchXDiffLevel);
+                        if (mPlayer != null && mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED) {
                             if (mTouchXDiffLevelLast < mTouchXDiffLevel) {
                                 videoForward();
-                                mTouchXDiffLevelLast = mTouchXDiffLevel;
-                            }
-                            if (mTouchXDiffLevelLast > mTouchXDiffLevel) {
+                            } else if (mTouchXDiffLevelLast > mTouchXDiffLevel) {
                                 videoBackward();
                             }
                             mTouchXDiffLevelLast = mTouchXDiffLevel;
@@ -200,7 +211,7 @@ class VideoController {
      *
      * @param aPath video file path
      */
-    void setVideoPath(String aPath) {
+    public void setVideoPath(String aPath) {
         mFilePath = aPath;
         mViewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
     }
@@ -208,12 +219,11 @@ class VideoController {
     /**
      * videoPlayback
      */
-    void videoPlayback() {
+    public void videoPlayback() {
         Log.d(TAG, "videoPlayback");
         if (mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED) {
             // pause => playback
             if (mThread == null || !mThread.isAlive()) {
-                mPlayer.setStatus(VideoRunnable.STATUS.PLAYING);
                 mViewController.setVisibility(VideoRunnable.STATUS.PLAYING);
                 mThread = new Thread(mPlayer);
                 mThread.start();
@@ -224,7 +234,6 @@ class VideoController {
         } else if (mPlayer.getStatus() == VideoRunnable.STATUS.VIDEO_END) {
             mPlayer.release();
             mPlayer.prepare(mFilePath);
-            mPlayer.setStatus(VideoRunnable.STATUS.PLAYING);
             mViewController.setVisibility(VideoRunnable.STATUS.PLAYING);
             mThread = new Thread(mPlayer);
             mThread.start();
@@ -237,18 +246,19 @@ class VideoController {
     private void videoPause() {
         Log.d(TAG, "videoPause");
         if (mThread.isAlive()) {
+            Log.d(TAG, "interrupt");
             mThread.interrupt();
         }
         mPlayer.setStatus(VideoRunnable.STATUS.PAUSED);
         mViewController.setVisibility(VideoRunnable.STATUS.PAUSED);
+
     }
 
     /**
      * videoStop
      */
-    void videoStop() {
+    public void videoStop() {
         Log.d(TAG, "videoStop");
-        mPlayer.setStatus(VideoRunnable.STATUS.PAUSED);
         if (mThread.isAlive()) {
             try {
                 Log.d(TAG, "join");
@@ -285,6 +295,7 @@ class VideoController {
         }
         mPlayer.seekTo(aProgress);
         mPlayer.setStatus(VideoRunnable.STATUS.SEEKING);
+        mViewController.setVisibility(VideoRunnable.STATUS.SEEKING);
         mThread = new Thread(mPlayer);
         mThread.start();
     }
@@ -292,13 +303,14 @@ class VideoController {
     /**
      * videoForward
      */
-    void videoForward() {
+    public void videoForward() {
         Log.d(TAG, "videoForward");
         if (mThread.isAlive()) {
             return;
         }
         if (mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED) {
             mPlayer.setStatus(VideoRunnable.STATUS.FORWARD);
+            mViewController.setVisibility(VideoRunnable.STATUS.FORWARD);
             mThread = new Thread(mPlayer);
             mThread.start();
         }
@@ -307,13 +319,15 @@ class VideoController {
     /**
      * videoBackward
      */
-    void videoBackward() {
+    public void videoBackward() {
         Log.d(TAG, "videoBackward");
         if (mThread.isAlive()) {
+            Log.d(TAG, "Thread is alive.");
             return;
         }
         mPlayer.backward();
         mPlayer.setStatus(VideoRunnable.STATUS.BACKWARD);
+        mViewController.setVisibility(VideoRunnable.STATUS.BACKWARD);
         mThread = new Thread(mPlayer);
         mThread.start();
     }
@@ -321,54 +335,30 @@ class VideoController {
     /**
      * videoSpeedUp
      */
-    void videoSpeedUp() {
+    public void videoSpeedUp() {
         Log.d(TAG, "videoSpeedUp");
 
-        int speed = mPlayer.getSpeed();
-        switch (speed) {
-            case -4:
-                speed = -2;
-                break;
-            case -2:
-                speed = 0;
-                break;
-            case 0:
-                speed = 2;
-                break;
-            case 2:
-                speed = 4;
-                break;
-            case 4:
-                break;
+        double speed = mPlayer.getSpeed() * 2.0;
+        if (speed > SPEED_MAX) {
+            speed = SPEED_MAX;
         }
-        mViewController.setPlaybackSpeed(speed);
+
+        mViewController.setPlaybackSpeedText(speed);
         mPlayer.setSpeed(speed);
     }
 
     /**
      * videoSpeedDown
      */
-    void videoSpeedDown() {
+    public void videoSpeedDown() {
         Log.d(TAG, "videoSpeedDown");
 
-        int speed = mPlayer.getSpeed();
-        switch (speed) {
-            case -4:
-                break;
-            case -2:
-                speed = -4;
-                break;
-            case 0:
-                speed = -2;
-                break;
-            case 2:
-                speed = 0;
-                break;
-            case 4:
-                speed = 2;
-                break;
+        double speed = mPlayer.getSpeed() / 2.0;
+        if (speed < SPEED_MIN) {
+            speed = SPEED_MIN;
         }
-        mViewController.setPlaybackSpeed(speed);
+
+        mViewController.setPlaybackSpeedText(speed);
         mPlayer.setSpeed(speed);
     }
 
@@ -377,7 +367,7 @@ class VideoController {
      *
      * @param aManipulation 操作モード
      */
-    void setManipulation(MANIPULATION aManipulation) {
+    public void setManipulation(MANIPULATION aManipulation) {
         mManipulation = aManipulation;
         mViewController.setManipulation(mManipulation);
     }
