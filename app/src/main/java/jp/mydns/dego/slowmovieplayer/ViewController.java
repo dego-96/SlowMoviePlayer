@@ -24,90 +24,116 @@ import jp.mydns.dego.slowmovieplayer.VideoPlayer.VideoRunnable;
 
 public class ViewController {
 
+    // ---------------------------------------------------------------------------------------------
+    // inner class
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // public constant values
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // private constant values
+    // ---------------------------------------------------------------------------------------------
     private static final String TAG = "ViewController";
     private static final int ANIMATOR_DURATION = 300;
 
-    private final static SimpleDateFormat sDateFormat = new SimpleDateFormat("mm:ss:SSS", Locale.JAPAN);
+    // ---------------------------------------------------------------------------------------------
+    // private fields
+    // ---------------------------------------------------------------------------------------------
+    private final static SimpleDateFormat TimerFormat = new SimpleDateFormat("mm:ss:SSS", Locale.JAPAN);
 
-    private Activity mActivity;
-    private boolean mFrameOuted;
+    private Activity activity;
+    private boolean frameOuted;
 
     /* Views */
-    private VideoSurfaceView mSurfaceView;
-    private ImageView mNoVideoImageView;
-    private ImageView mGalleryImageView;
-    private ImageView mBackwardImageView;
-    private ImageView mForwardImageView;
-    private ImageView mPlayImageView;
-    private ImageView mStopImageView;
-    private ImageView mSpeedUpImageView;
-    private ImageView mSpeedDownImageView;
-    private ImageView mExpandImageView;
-    private ImageView mFrameControlImageView;
-    private SeekBar mSeekBar;
-    private TextView mPlaybackSpeedTextView;
-    private TextView mCurrentTimeTextView;
-    private TextView mRemainTimeTextView;
+    private VideoSurfaceView surfaceView;
+    private ImageView noVideoImageView;
+    private ImageView galleryImageView;
+    private ImageView backwardImageView;
+    private ImageView forwardImageView;
+    private ImageView playImageView;
+    private ImageView stopImageView;
+    private ImageView speedUpImageView;
+    private ImageView speedDownImageView;
+    private ImageView expandImageView;
+    private ImageView frameControlImageView;
+    private SeekBar seekBar;
+    private TextView playbackSpeedTextView;
+    private TextView currentTimeTextView;
+    private TextView remainTimeTextView;
 
     /* Layout */
-    private LinearLayout mControlButtonsLayout;
-    private LinearLayout mSeekBarLayout;
+    private LinearLayout controlButtonsLayout;
+    private LinearLayout seekBarLayout;
+
+    // ---------------------------------------------------------------------------------------------
+    // static fields
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // private static method
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // constructor
+    // ---------------------------------------------------------------------------------------------
 
     /**
      * ViewController
      *
-     * @param aActivity main activity
+     * @param activity main activity
      */
-    public ViewController(Activity aActivity) {
+    public ViewController(Activity activity) {
         Log.d(TAG, "ViewController");
 
-        mActivity = aActivity;
+        this.activity = activity;
 
-        mSurfaceView = aActivity.findViewById(R.id.player_surface_view);
-        mNoVideoImageView = aActivity.findViewById(R.id.image_no_video);
-        mGalleryImageView = aActivity.findViewById(R.id.button_gallery);
-        mBackwardImageView = aActivity.findViewById(R.id.button_backward);
-        mForwardImageView = aActivity.findViewById(R.id.button_forward);
-        mPlayImageView = aActivity.findViewById(R.id.button_play);
-        mStopImageView = aActivity.findViewById(R.id.button_stop);
-        mSpeedUpImageView = aActivity.findViewById(R.id.button_speed_up);
-        mSpeedDownImageView = aActivity.findViewById(R.id.button_speed_down);
-        mExpandImageView = aActivity.findViewById(R.id.button_expand_contract);
-        mFrameControlImageView = aActivity.findViewById(R.id.button_frame_control);
-        mSeekBar = aActivity.findViewById(R.id.seek_bar_progress);
-        mPlaybackSpeedTextView = aActivity.findViewById(R.id.text_view_speed);
-        mCurrentTimeTextView = aActivity.findViewById(R.id.text_view_current_time);
-        mRemainTimeTextView = aActivity.findViewById(R.id.text_view_remain_time);
+        this.surfaceView = activity.findViewById(R.id.player_surface_view);
+        this.noVideoImageView = activity.findViewById(R.id.image_no_video);
+        this.galleryImageView = activity.findViewById(R.id.button_gallery);
+        this.backwardImageView = activity.findViewById(R.id.button_backward);
+        this.forwardImageView = activity.findViewById(R.id.button_forward);
+        this.playImageView = activity.findViewById(R.id.button_play);
+        this.stopImageView = activity.findViewById(R.id.button_stop);
+        this.speedUpImageView = activity.findViewById(R.id.button_speed_up);
+        this.speedDownImageView = activity.findViewById(R.id.button_speed_down);
+        this.expandImageView = activity.findViewById(R.id.button_expand_contract);
+        this.frameControlImageView = activity.findViewById(R.id.button_frame_control);
+        this.seekBar = activity.findViewById(R.id.seek_bar_progress);
+        this.playbackSpeedTextView = activity.findViewById(R.id.text_view_speed);
+        this.currentTimeTextView = activity.findViewById(R.id.text_view_current_time);
+        this.remainTimeTextView = activity.findViewById(R.id.text_view_remain_time);
 
-        mControlButtonsLayout = aActivity.findViewById(R.id.layout_control_buttons);
-        mSeekBarLayout = aActivity.findViewById(R.id.layout_seek_bar);
+        this.controlButtonsLayout = activity.findViewById(R.id.layout_control_buttons);
+        this.seekBarLayout = activity.findViewById(R.id.layout_seek_bar);
 
-        mFrameOuted = false;
+        this.frameOuted = false;
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // public method
+    // ---------------------------------------------------------------------------------------------
 
     /**
      * getView
      *
-     * @param aId view id
+     * @param id view id
      * @return view
      */
-    public View getView(int aId) {
-        return mActivity.findViewById(aId);
+    public View getView(int id) {
+        return this.activity.findViewById(id);
     }
 
     /**
      * setSurfaceViewSize
      *
-     * @param aVideoWidth  width
-     * @param aVideoHeight height
-     * @param aRotation    rotation
+     * @param videoWidth  width
+     * @param videoHeight height
+     * @param rotation    rotation
      */
     @SuppressWarnings("noinspection")
-    public void setSurfaceViewSize(int aVideoWidth, int aVideoHeight, int aRotation) {
+    public void setSurfaceViewSize(int videoWidth, int videoHeight, int rotation) {
         Log.d(TAG, "setSurfaceViewSize");
 
         Point point = new Point();
-        Display display = mActivity.getWindowManager().getDefaultDisplay();
+        Display display = this.activity.getWindowManager().getDefaultDisplay();
         display.getSize(point);
         int displayWidth = point.x;
         int displayHeight = point.y;
@@ -115,30 +141,30 @@ public class ViewController {
 
         int width;
         int height;
-        if ((aRotation % 180) == 0) {
+        if ((rotation % 180) == 0) {
             // 横画面映像
-            if (((float) displayWidth / (float) displayHeight) > ((float) aVideoWidth / (float) aVideoHeight)) {
+            if (((float) displayWidth / (float) displayHeight) > ((float) videoWidth / (float) videoHeight)) {
                 // 画面より縦長
-                width = (int) ((float) aVideoWidth * ((float) displayHeight / (float) aVideoHeight));
+                width = (int) ((float) videoWidth * ((float) displayHeight / (float) videoHeight));
                 height = displayHeight;
             } else {
                 // 画面より横長
                 width = displayWidth;
-                height = (int) ((float) aVideoHeight * ((float) displayWidth / (float) aVideoWidth));
+                height = (int) ((float) videoHeight * ((float) displayWidth / (float) videoWidth));
             }
         } else {
             // 縦画面映像
-            if (((float) displayWidth / (float) displayHeight) > ((float) aVideoHeight / (float) aVideoWidth)) {
+            if (((float) displayWidth / (float) displayHeight) > ((float) videoHeight / (float) videoWidth)) {
                 // 画面より縦長
-                width = (int) ((float) aVideoHeight * ((float) displayHeight / (float) aVideoWidth));
+                width = (int) ((float) videoHeight * ((float) displayHeight / (float) videoWidth));
                 height = displayHeight;
             } else {
                 // 画面より横長
                 width = displayWidth;
-                height = (int) ((float) aVideoWidth * ((float) displayWidth / (float) aVideoHeight));
+                height = (int) ((float) videoWidth * ((float) displayWidth / (float) videoHeight));
             }
         }
-        mSurfaceView.setInitialSize(width, height);
+        this.surfaceView.setInitialSize(width, height);
     }
 
     /**
@@ -150,39 +176,39 @@ public class ViewController {
         Log.d(TAG, "setVisibility( " + aStatus.name() + " )");
         switch (aStatus) {
             case INIT:
-                mSurfaceView.setVisibility(View.GONE);
-                mNoVideoImageView.setVisibility(View.VISIBLE);
-                mGalleryImageView.setVisibility(View.VISIBLE);
-                mBackwardImageView.setVisibility(View.GONE);
-                mForwardImageView.setVisibility(View.GONE);
-                mPlayImageView.setVisibility(View.GONE);
-                mStopImageView.setVisibility(View.GONE);
-                mSpeedUpImageView.setVisibility(View.GONE);
-                mSpeedDownImageView.setVisibility(View.GONE);
-                mExpandImageView.setVisibility(View.GONE);
-                mFrameControlImageView.setVisibility(View.GONE);
-                mSeekBar.setVisibility(View.GONE);
-                mPlaybackSpeedTextView.setVisibility(View.GONE);
-                mCurrentTimeTextView.setVisibility(View.GONE);
-                mRemainTimeTextView.setVisibility(View.GONE);
+                this.surfaceView.setVisibility(View.GONE);
+                this.noVideoImageView.setVisibility(View.VISIBLE);
+                this.galleryImageView.setVisibility(View.VISIBLE);
+                this.backwardImageView.setVisibility(View.GONE);
+                this.forwardImageView.setVisibility(View.GONE);
+                this.playImageView.setVisibility(View.GONE);
+                this.stopImageView.setVisibility(View.GONE);
+                this.speedUpImageView.setVisibility(View.GONE);
+                this.speedDownImageView.setVisibility(View.GONE);
+                this.expandImageView.setVisibility(View.GONE);
+                this.frameControlImageView.setVisibility(View.GONE);
+                this.seekBar.setVisibility(View.GONE);
+                this.playbackSpeedTextView.setVisibility(View.GONE);
+                this.currentTimeTextView.setVisibility(View.GONE);
+                this.remainTimeTextView.setVisibility(View.GONE);
                 break;
             case PLAYING:
-                mSurfaceView.setVisibility(View.VISIBLE);
-                mNoVideoImageView.setVisibility(View.GONE);
-                mGalleryImageView.setVisibility(View.INVISIBLE);
-                mBackwardImageView.setVisibility(View.INVISIBLE);
-                mForwardImageView.setVisibility(View.INVISIBLE);
-                mPlayImageView.setVisibility(View.VISIBLE);
-                mPlayImageView.setImageResource(R.drawable.pause);
-                mStopImageView.setVisibility(View.VISIBLE);
-                mSpeedUpImageView.setVisibility(View.INVISIBLE);
-                mSpeedDownImageView.setVisibility(View.INVISIBLE);
-                mExpandImageView.setVisibility(View.INVISIBLE);
-                mFrameControlImageView.setVisibility(View.INVISIBLE);
-                mSeekBar.setVisibility(View.VISIBLE);
-                mPlaybackSpeedTextView.setVisibility(View.VISIBLE);
-                mCurrentTimeTextView.setVisibility(View.VISIBLE);
-                mRemainTimeTextView.setVisibility(View.VISIBLE);
+                this.surfaceView.setVisibility(View.VISIBLE);
+                this.noVideoImageView.setVisibility(View.GONE);
+                this.galleryImageView.setVisibility(View.INVISIBLE);
+                this.backwardImageView.setVisibility(View.INVISIBLE);
+                this.forwardImageView.setVisibility(View.INVISIBLE);
+                this.playImageView.setVisibility(View.VISIBLE);
+                this.playImageView.setImageResource(R.drawable.pause);
+                this.stopImageView.setVisibility(View.VISIBLE);
+                this.speedUpImageView.setVisibility(View.INVISIBLE);
+                this.speedDownImageView.setVisibility(View.INVISIBLE);
+                this.expandImageView.setVisibility(View.INVISIBLE);
+                this.frameControlImageView.setVisibility(View.INVISIBLE);
+                this.seekBar.setVisibility(View.VISIBLE);
+                this.playbackSpeedTextView.setVisibility(View.VISIBLE);
+                this.currentTimeTextView.setVisibility(View.VISIBLE);
+                this.remainTimeTextView.setVisibility(View.VISIBLE);
                 break;
             case VIDEO_SELECTED:
             case PAUSED:
@@ -190,22 +216,22 @@ public class ViewController {
             case FORWARD:
             case BACKWARD:
             case SEEKING:
-                mSurfaceView.setVisibility(View.VISIBLE);
-                mNoVideoImageView.setVisibility(View.GONE);
-                mGalleryImageView.setVisibility(View.VISIBLE);
-                mBackwardImageView.setVisibility(View.VISIBLE);
-                mForwardImageView.setVisibility(View.VISIBLE);
-                mPlayImageView.setVisibility(View.VISIBLE);
-                mPlayImageView.setImageResource(R.drawable.play);
-                mStopImageView.setVisibility(View.VISIBLE);
-                mSpeedUpImageView.setVisibility(View.VISIBLE);
-                mSpeedDownImageView.setVisibility(View.VISIBLE);
-                mExpandImageView.setVisibility(View.VISIBLE);
-                mFrameControlImageView.setVisibility(View.VISIBLE);
-                mSeekBar.setVisibility(View.VISIBLE);
-                mPlaybackSpeedTextView.setVisibility(View.VISIBLE);
-                mCurrentTimeTextView.setVisibility(View.VISIBLE);
-                mRemainTimeTextView.setVisibility(View.VISIBLE);
+                this.surfaceView.setVisibility(View.VISIBLE);
+                this.noVideoImageView.setVisibility(View.GONE);
+                this.galleryImageView.setVisibility(View.VISIBLE);
+                this.backwardImageView.setVisibility(View.VISIBLE);
+                this.forwardImageView.setVisibility(View.VISIBLE);
+                this.playImageView.setVisibility(View.VISIBLE);
+                this.playImageView.setImageResource(R.drawable.play);
+                this.stopImageView.setVisibility(View.VISIBLE);
+                this.speedUpImageView.setVisibility(View.VISIBLE);
+                this.speedDownImageView.setVisibility(View.VISIBLE);
+                this.expandImageView.setVisibility(View.VISIBLE);
+                this.frameControlImageView.setVisibility(View.VISIBLE);
+                this.seekBar.setVisibility(View.VISIBLE);
+                this.playbackSpeedTextView.setVisibility(View.VISIBLE);
+                this.currentTimeTextView.setVisibility(View.VISIBLE);
+                this.remainTimeTextView.setVisibility(View.VISIBLE);
                 break;
             default:
                 Log.e(TAG, "invalid player status :" + aStatus);
@@ -216,18 +242,18 @@ public class ViewController {
     /**
      * setProgress
      *
-     * @param aProgress progress
+     * @param progress progress
      */
-    public void setProgress(int aProgress) {
-        Log.d(TAG, "setProgress (" + aProgress + ")");
-        mSeekBar.setProgress(aProgress);
+    public void setProgress(int progress) {
+        Log.d(TAG, "setProgress (" + progress + ")");
+        this.seekBar.setProgress(progress);
 
-        mCurrentTimeTextView.setText(sDateFormat.format(new Date(aProgress)));
-        int duration = mSeekBar.getMax();
-        if (aProgress < duration) {
-            mRemainTimeTextView.setText(sDateFormat.format(new Date(duration - aProgress)));
+        this.currentTimeTextView.setText(TimerFormat.format(new Date(progress)));
+        int duration = this.seekBar.getMax();
+        if (progress < duration) {
+            this.remainTimeTextView.setText(TimerFormat.format(new Date(duration - progress)));
         } else {
-            mRemainTimeTextView.setText(mActivity.getString(R.string.remain_time_init));
+            this.remainTimeTextView.setText(this.activity.getString(R.string.remain_time_init));
         }
     }
 
@@ -238,44 +264,44 @@ public class ViewController {
      */
     public void setDuration(int aDuration) {
         Log.d(TAG, "setDuration (" + aDuration + ")");
-        mSeekBar.setMax(aDuration);
+        this.seekBar.setMax(aDuration);
 
-        mRemainTimeTextView.setText(sDateFormat.format(new Date(aDuration)));
+        this.remainTimeTextView.setText(TimerFormat.format(new Date(aDuration)));
     }
 
     /**
-     * setPlaybackSpeed
+     * setPlaySpeed
      *
      * @param speed playback speed
      */
-    public void setPlaybackSpeedText(double speed) {
+    public void setPlaySpeedText(double speed) {
         Log.d(TAG, "setPlaybackSpeed");
 
         if (3.0 < speed) {
-            mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x4_0));
+            this.playbackSpeedTextView.setText(this.activity.getString(R.string.playback_speed_x4_0));
         } else if (1.5 < speed) {
-            mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x2_0));
+            this.playbackSpeedTextView.setText(this.activity.getString(R.string.playback_speed_x2_0));
         } else if (0.8 < speed) {
-            mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_init));
+            this.playbackSpeedTextView.setText(this.activity.getString(R.string.playback_speed_init));
         } else if (0.4 < speed) {
-            mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x1_2));
+            this.playbackSpeedTextView.setText(this.activity.getString(R.string.playback_speed_x1_2));
         } else {
-            mPlaybackSpeedTextView.setText(mActivity.getString(R.string.playback_speed_x1_4));
+            this.playbackSpeedTextView.setText(this.activity.getString(R.string.playback_speed_x1_4));
         }
     }
 
     /**
      * setManipulation
      *
-     * @param aManipulation 操作モード
+     * @param manipulation 操作モード
      */
-    public void setManipulation(VideoController.MANIPULATION aManipulation) {
-        if (aManipulation == VideoController.MANIPULATION.EXPAND_CONTRACT) {
-            mExpandImageView.setImageResource(R.drawable.expand_en);
-            mFrameControlImageView.setImageResource(R.drawable.frame_control);
-        } else if (aManipulation == VideoController.MANIPULATION.FRAME_CONTROL) {
-            mExpandImageView.setImageResource(R.drawable.expand);
-            mFrameControlImageView.setImageResource(R.drawable.frame_control_en);
+    public void setManipulation(VideoController.MANIPULATION manipulation) {
+        if (manipulation == VideoController.MANIPULATION.EXPAND_CONTRACT) {
+            this.expandImageView.setImageResource(R.drawable.expand_en);
+            this.frameControlImageView.setImageResource(R.drawable.frame_control);
+        } else if (manipulation == VideoController.MANIPULATION.FRAME_CONTROL) {
+            this.expandImageView.setImageResource(R.drawable.expand);
+            this.frameControlImageView.setImageResource(R.drawable.frame_control_en);
         }
     }
 
@@ -288,7 +314,7 @@ public class ViewController {
         float toX, fromX, toY, fromY;
         List<Animator> animatorList = new ArrayList<>();
 
-        if (mFrameOuted) {
+        if (this.frameOuted) {
             // animation (frame in)
             fromX = 280.0f;
             toX = 0.0f;
@@ -301,15 +327,15 @@ public class ViewController {
             fromY = 0.0f;
             toY = 280.0f;
         }
-        mFrameOuted = !mFrameOuted;
+        this.frameOuted = !this.frameOuted;
 
-        ObjectAnimator animatorTrans_Buttons = ObjectAnimator.ofFloat(mControlButtonsLayout, "translationY", fromY, toY);
-        ObjectAnimator animatorTrans_SeekBar = ObjectAnimator.ofFloat(mSeekBarLayout, "translationY", fromY, toY);
-        ObjectAnimator animatorTrans_Forward = ObjectAnimator.ofFloat(mForwardImageView, "translationX", fromX, toX);
-        ObjectAnimator animatorTrans_Backward = ObjectAnimator.ofFloat(mBackwardImageView, "translationX", -1.0f * fromX, -1.0f * toX);
-        ObjectAnimator animatorTrans_Gallery = ObjectAnimator.ofFloat(mGalleryImageView, "translationY", -1.0f * fromY, -1.0f * toY);
-        ObjectAnimator animatorTrans_ExpandContract = ObjectAnimator.ofFloat(mExpandImageView, "translationX", fromX, toX);
-        ObjectAnimator animatorTrans_FrameControl = ObjectAnimator.ofFloat(mFrameControlImageView, "translationX", fromX, toX);
+        ObjectAnimator animatorTrans_Buttons = ObjectAnimator.ofFloat(this.controlButtonsLayout, "translationY", fromY, toY);
+        ObjectAnimator animatorTrans_SeekBar = ObjectAnimator.ofFloat(this.seekBarLayout, "translationY", fromY, toY);
+        ObjectAnimator animatorTrans_Forward = ObjectAnimator.ofFloat(this.forwardImageView, "translationX", fromX, toX);
+        ObjectAnimator animatorTrans_Backward = ObjectAnimator.ofFloat(this.backwardImageView, "translationX", -1.0f * fromX, -1.0f * toX);
+        ObjectAnimator animatorTrans_Gallery = ObjectAnimator.ofFloat(this.galleryImageView, "translationY", -1.0f * fromY, -1.0f * toY);
+        ObjectAnimator animatorTrans_ExpandContract = ObjectAnimator.ofFloat(this.expandImageView, "translationX", fromX, toX);
+        ObjectAnimator animatorTrans_FrameControl = ObjectAnimator.ofFloat(this.frameControlImageView, "translationX", fromX, toX);
 
         animatorTrans_Buttons.setDuration(ANIMATOR_DURATION);
         animatorTrans_SeekBar.setDuration(ANIMATOR_DURATION);
@@ -330,4 +356,9 @@ public class ViewController {
         animatorSet.playTogether(animatorList);
         animatorSet.start();
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // private method (package private)
+    // ---------------------------------------------------------------------------------------------
+
 }

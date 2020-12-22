@@ -14,176 +14,131 @@ import jp.mydns.dego.slowmovieplayer.ViewController;
 
 public class VideoController {
 
+    // ---------------------------------------------------------------------------------------------
+    // inner class
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // public constant values
+    // ---------------------------------------------------------------------------------------------
     public enum MANIPULATION {
         EXPAND_CONTRACT,
         FRAME_CONTROL
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // private constant values
+    // ---------------------------------------------------------------------------------------------
     private static final String TAG = "VideoController";
     private static final int TOUCH_X_DIFF_SIZE = 50;
     private static final double SPEED_MAX = 4.0;
     private static final double SPEED_MIN = 1.0 / 4.0;
 
-    private ViewController mViewController;
-    private VideoRunnable mPlayer;
-    private String mFilePath;
-    private Thread mThread;
-    private long mTouchDownTime;
-    private float mTouchStartX;
-    private int mTouchXDiffLevel;
-    private int mTouchXDiffLevelLast;
-    private MANIPULATION mManipulation;
+    // ---------------------------------------------------------------------------------------------
+    // private fields
+    // ---------------------------------------------------------------------------------------------
+    private ViewController viewController;
+    private VideoRunnable player;
+    private String filePath;
+    private Thread videoThread;
+    private long touchDownTime;
+    private float touchStartX;
+    private int touchXDiffLevelLast;
+    private MANIPULATION manipulation;
+
+    // ---------------------------------------------------------------------------------------------
+    // static fields
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // private static method
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // constructor
+    // ---------------------------------------------------------------------------------------------
 
     /**
      * VideoController
      *
-     * @param aActivity activity
+     * @param activity activity
      */
-    public VideoController(final Activity aActivity) {
+    public VideoController(final Activity activity) {
         Log.d(TAG, "VideoController");
-        mViewController = new ViewController(aActivity);
-        mViewController.setVisibility(VideoRunnable.STATUS.INIT);
-        mPlayer = VideoRunnable.getInstance();
-        mPlayer.setVideoHandler(new VideoPlayerHandler(mViewController));
+        this.viewController = new ViewController(activity);
+        this.viewController.setVisibility(VideoRunnable.STATUS.INIT);
+        this.player = VideoRunnable.getInstance();
+        this.player.setVideoHandler(new VideoPlayerHandler(this.viewController));
 
-        mTouchDownTime = 0;
-        mManipulation = MANIPULATION.EXPAND_CONTRACT;
-        mViewController.setManipulation(mManipulation);
+        this.touchDownTime = 0;
+        this.manipulation = MANIPULATION.EXPAND_CONTRACT;
+        this.viewController.setManipulation(this.manipulation);
 
-        mPlayer.setOnVideoStatusChangeListener(new OnVideoStatusChangeListener() {
+        this.player.setOnVideoStatusChangeListener(new OnVideoStatusChangeListener() {
             @Override
             public void onDurationChanged(int duration) {
                 Log.d(TAG, "onDurationChanged");
-                mViewController.setDuration(duration);
+                viewController.setDuration(duration);
             }
         });
 
-        final VideoSurfaceView surfaceView = (VideoSurfaceView) mViewController.getView(R.id.player_surface_view);
+        VideoSurfaceView surfaceView = (VideoSurfaceView) this.viewController.getView(R.id.player_surface_view);
         surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 Log.d(TAG, "surfaceCreated");
-                if (mFilePath != null) {
-                    MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-                    retriever.setDataSource(mFilePath);
-
-                    logMetaData(retriever);
-
-                    int width = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
-                    int height = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-                    int rotation = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
-                    mViewController.setSurfaceViewSize(width, height, rotation);
-                }
+                setSurfaceViewSize();
             }
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
                 Log.d(TAG, "surfaceChanged");
-                if (mFilePath != null) {
-                    if (mThread != null && mThread.isAlive()) {
-                        try {
-                            mThread.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        return;
-                    }
-                    if (mPlayer.getStatus() == VideoRunnable.STATUS.INIT ||
-                            mPlayer.getStatus() == VideoRunnable.STATUS.VIDEO_SELECTED) {
-                        mPlayer.init(mFilePath, holder.getSurface());
-                        mViewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
-                        mViewController.setPlaybackSpeedText(mPlayer.getSpeed());
-                        mThread = new Thread(mPlayer);
-                        mThread.start();
-                    }
-                }
+                videoSuspend(holder);
             }
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
                 Log.d(TAG, "surfaceDestroyed");
-                if (mFilePath != null) {
-                    mPlayer.setStatus(VideoRunnable.STATUS.PAUSED);
-                    if (mThread.isAlive()) {
-                        try {
-                            Log.d(TAG, "join");
-                            mThread.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    mPlayer.release();
-                    mPlayer.setStatus(VideoRunnable.STATUS.VIDEO_SELECTED);
-                }
+                videoRelease();
             }
         });
-        surfaceView.setOnTouchListener(new View.OnTouchListener() {
 
+        surfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public boolean onTouch(View aView, MotionEvent aMotionEvent) {
+            public boolean onTouch(View view, MotionEvent event) {
                 Log.d(TAG, "onTouch");
-                if (!(aView instanceof VideoSurfaceView)) {
+                if (!(view instanceof VideoSurfaceView)) {
                     return false;
                 }
 
                 // video pause
-                if (mPlayer != null &&
-                        mPlayer.getStatus() != VideoRunnable.STATUS.PAUSED &&
-                        mPlayer.getStatus() != VideoRunnable.STATUS.FORWARD &&
-                        mPlayer.getStatus() != VideoRunnable.STATUS.BACKWARD
+                if (player != null &&
+                    player.getStatus() != VideoRunnable.STATUS.PAUSED &&
+                    player.getStatus() != VideoRunnable.STATUS.FORWARD &&
+                    player.getStatus() != VideoRunnable.STATUS.BACKWARD
                 ) {
                     videoPause();
                 }
 
-                // click animation
-                if (aMotionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                    mTouchDownTime = System.nanoTime() / 1000 / 1000;
-                } else if (aMotionEvent.getAction() == MotionEvent.ACTION_UP) {
-                    long diffTime = System.nanoTime() / 1000 / 1000 - mTouchDownTime;
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    touchDownTime = System.nanoTime() / 1000 / 1000;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    long diffTime = System.nanoTime() / 1000 / 1000 - touchDownTime;
                     if (diffTime < 100) {
-                        aView.performClick();
-                        mViewController.animFullscreenPreview();
+                        view.performClick();
+                        viewController.animFullscreenPreview();
                         return true;
                     }
                 }
 
                 // touch process
-                if (mManipulation == MANIPULATION.EXPAND_CONTRACT) {
-                    if (aMotionEvent.getPointerCount() == 1) {
-                        Log.d(TAG, "move");
-                        ((VideoSurfaceView) aView).move(aMotionEvent);
-                    } else if (aMotionEvent.getPointerCount() == 2) {
-                        Log.d(TAG, "scale");
-                        ((VideoSurfaceView) aView).setGestureMotionEvent(aMotionEvent);
-                    }
-                } else if (mManipulation == MANIPULATION.FRAME_CONTROL &&
-                        aMotionEvent.getPointerCount() == 1) {
-                    if (aMotionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                        mTouchStartX = aMotionEvent.getX();
-                        mTouchXDiffLevel = 0;
-                        mTouchXDiffLevelLast = 0;
-                        Log.d(TAG, "Diff Level : " + mTouchXDiffLevelLast);
-                    } else if (aMotionEvent.getAction() == MotionEvent.ACTION_MOVE) {
-                        int diffX = (int) (aMotionEvent.getX() - mTouchStartX);
-                        Log.d(TAG, "diff x : " + diffX);
-
-                        mTouchXDiffLevel = diffX / TOUCH_X_DIFF_SIZE;
-                        Log.d(TAG, "Diff Level : " + mTouchXDiffLevelLast + " => " + mTouchXDiffLevel);
-                        if (mPlayer != null && mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED) {
-                            if (mTouchXDiffLevelLast < mTouchXDiffLevel) {
-                                videoForward();
-                            } else if (mTouchXDiffLevelLast > mTouchXDiffLevel) {
-                                videoBackward();
-                            }
-                            mTouchXDiffLevelLast = mTouchXDiffLevel;
-                        }
-                    }
+                if (manipulation == MANIPULATION.EXPAND_CONTRACT) {
+                    touchExpandContract((VideoSurfaceView) view, event);
+                } else if (manipulation == MANIPULATION.FRAME_CONTROL && event.getPointerCount() == 1) {
+                    touchFrameControl(event);
                 }
                 return true;
             }
         });
 
-        SeekBar seekBar = (SeekBar) mViewController.getView(R.id.seek_bar_progress);
+        SeekBar seekBar = (SeekBar) this.viewController.getView(R.id.seek_bar_progress);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -206,52 +161,42 @@ public class VideoController {
         });
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // public method
+    // ---------------------------------------------------------------------------------------------
+
     /**
      * setVideoPath
      *
-     * @param aPath video file path
+     * @param path video file path
      */
-    public void setVideoPath(String aPath) {
-        mFilePath = aPath;
-        mViewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
+    public void setVideoPath(String path) {
+        this.filePath = path;
+        this.viewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
     }
 
     /**
-     * videoPlayback
+     * videoPlay
      */
-    public void videoPlayback() {
-        Log.d(TAG, "videoPlayback");
-        if (mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED) {
-            // pause => playback
-            if (mThread == null || !mThread.isAlive()) {
-                mViewController.setVisibility(VideoRunnable.STATUS.PLAYING);
-                mThread = new Thread(mPlayer);
-                mThread.start();
+    public void videoPlay() {
+        Log.d(TAG, "videoPlay");
+        if (this.player.getStatus() == VideoRunnable.STATUS.PAUSED) {
+            // pause => play
+            if (this.videoThread == null || !this.videoThread.isAlive()) {
+                this.viewController.setVisibility(VideoRunnable.STATUS.PLAYING);
+                this.videoThread = new Thread(this.player);
+                this.videoThread.start();
             }
-        } else if (mPlayer.getStatus() == VideoRunnable.STATUS.PLAYING) {
-            // playback => pause
-            videoPause();
-        } else if (mPlayer.getStatus() == VideoRunnable.STATUS.VIDEO_END) {
-            mPlayer.release();
-            mPlayer.prepare(mFilePath);
-            mViewController.setVisibility(VideoRunnable.STATUS.PLAYING);
-            mThread = new Thread(mPlayer);
-            mThread.start();
+        } else if (this.player.getStatus() == VideoRunnable.STATUS.PLAYING) {
+            // play => pause
+            this.videoPause();
+        } else if (this.player.getStatus() == VideoRunnable.STATUS.VIDEO_END) {
+            this.player.release();
+            this.player.prepare(this.filePath);
+            this.viewController.setVisibility(VideoRunnable.STATUS.PLAYING);
+            this.videoThread = new Thread(this.player);
+            this.videoThread.start();
         }
-    }
-
-    /**
-     * videoPause
-     */
-    private void videoPause() {
-        Log.d(TAG, "videoPause");
-        if (mThread.isAlive()) {
-            Log.d(TAG, "interrupt");
-            mThread.interrupt();
-        }
-        mPlayer.setStatus(VideoRunnable.STATUS.PAUSED);
-        mViewController.setVisibility(VideoRunnable.STATUS.PAUSED);
-
     }
 
     /**
@@ -259,45 +204,20 @@ public class VideoController {
      */
     public void videoStop() {
         Log.d(TAG, "videoStop");
-        if (mThread.isAlive()) {
+        if (this.videoThread.isAlive()) {
             try {
                 Log.d(TAG, "join");
-                mThread.join();
+                this.videoThread.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        mPlayer.release();
-        mPlayer.prepare(mFilePath);
-        mPlayer.setStatus(VideoRunnable.STATUS.VIDEO_SELECTED);
-        mViewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
-        mThread = new Thread(mPlayer);
-        mThread.start();
-    }
-
-    /**
-     * videoSeek
-     *
-     * @param aProgress video progress
-     */
-    private void videoSeek(int aProgress) {
-        Log.d(TAG, "videoSeek");
-        if (mPlayer.getStatus() == VideoRunnable.STATUS.SEEKING) {
-            return;
-        }
-        if (mThread.isAlive()) {
-            try {
-                Log.d(TAG, "join");
-                mThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        mPlayer.seekTo(aProgress);
-        mPlayer.setStatus(VideoRunnable.STATUS.SEEKING);
-        mViewController.setVisibility(VideoRunnable.STATUS.SEEKING);
-        mThread = new Thread(mPlayer);
-        mThread.start();
+        this.player.release();
+        this.player.prepare(this.filePath);
+        this.player.setStatus(VideoRunnable.STATUS.VIDEO_SELECTED);
+        this.viewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
+        this.videoThread = new Thread(this.player);
+        this.videoThread.start();
     }
 
     /**
@@ -305,14 +225,14 @@ public class VideoController {
      */
     public void videoForward() {
         Log.d(TAG, "videoForward");
-        if (mThread.isAlive()) {
+        if (this.videoThread.isAlive()) {
             return;
         }
-        if (mPlayer.getStatus() == VideoRunnable.STATUS.PAUSED) {
-            mPlayer.setStatus(VideoRunnable.STATUS.FORWARD);
-            mViewController.setVisibility(VideoRunnable.STATUS.FORWARD);
-            mThread = new Thread(mPlayer);
-            mThread.start();
+        if (this.player.getStatus() == VideoRunnable.STATUS.PAUSED) {
+            this.player.setStatus(VideoRunnable.STATUS.FORWARD);
+            this.viewController.setVisibility(VideoRunnable.STATUS.FORWARD);
+            this.videoThread = new Thread(this.player);
+            this.videoThread.start();
         }
     }
 
@@ -321,15 +241,15 @@ public class VideoController {
      */
     public void videoBackward() {
         Log.d(TAG, "videoBackward");
-        if (mThread.isAlive()) {
+        if (this.videoThread.isAlive()) {
             Log.d(TAG, "Thread is alive.");
             return;
         }
-        mPlayer.backward();
-        mPlayer.setStatus(VideoRunnable.STATUS.BACKWARD);
-        mViewController.setVisibility(VideoRunnable.STATUS.BACKWARD);
-        mThread = new Thread(mPlayer);
-        mThread.start();
+        this.player.backward();
+        this.player.setStatus(VideoRunnable.STATUS.BACKWARD);
+        this.viewController.setVisibility(VideoRunnable.STATUS.BACKWARD);
+        this.videoThread = new Thread(this.player);
+        this.videoThread.start();
     }
 
     /**
@@ -338,13 +258,13 @@ public class VideoController {
     public void videoSpeedUp() {
         Log.d(TAG, "videoSpeedUp");
 
-        double speed = mPlayer.getSpeed() * 2.0;
+        double speed = this.player.getSpeed() * 2.0;
         if (speed > SPEED_MAX) {
             speed = SPEED_MAX;
         }
 
-        mViewController.setPlaybackSpeedText(speed);
-        mPlayer.setSpeed(speed);
+        this.viewController.setPlaySpeedText(speed);
+        this.player.setSpeed(speed);
     }
 
     /**
@@ -353,43 +273,193 @@ public class VideoController {
     public void videoSpeedDown() {
         Log.d(TAG, "videoSpeedDown");
 
-        double speed = mPlayer.getSpeed() / 2.0;
+        double speed = this.player.getSpeed() / 2.0;
         if (speed < SPEED_MIN) {
             speed = SPEED_MIN;
         }
 
-        mViewController.setPlaybackSpeedText(speed);
-        mPlayer.setSpeed(speed);
+        this.viewController.setPlaySpeedText(speed);
+        this.player.setSpeed(speed);
     }
 
     /**
      * setManipulation
      *
-     * @param aManipulation 操作モード
+     * @param manipulation 操作モード
      */
-    public void setManipulation(MANIPULATION aManipulation) {
-        mManipulation = aManipulation;
-        mViewController.setManipulation(mManipulation);
+    public void setManipulation(MANIPULATION manipulation) {
+        this.manipulation = manipulation;
+        this.viewController.setManipulation(this.manipulation);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // private method (package private)
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * setSurfaceViewSize
+     */
+    private void setSurfaceViewSize() {
+        if (this.filePath != null) {
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            retriever.setDataSource(this.filePath);
+
+            logMetaData(retriever);
+
+            int width = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+            int height = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+            int rotation = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
+            this.viewController.setSurfaceViewSize(width, height, rotation);
+        }
+    }
+
+    /**
+     * videoSuspend
+     *
+     * @param holder surface holder
+     */
+    private void videoSuspend(SurfaceHolder holder) {
+        if (this.filePath != null) {
+            if (this.videoThread != null && this.videoThread.isAlive()) {
+                try {
+                    this.videoThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return;
+            }
+
+            // 再初期化
+            if (this.player.getStatus() == VideoRunnable.STATUS.INIT ||
+                this.player.getStatus() == VideoRunnable.STATUS.VIDEO_SELECTED) {
+                this.player.init(this.filePath, holder.getSurface());
+                this.viewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
+                this.viewController.setPlaySpeedText(this.player.getSpeed());
+                this.videoThread = new Thread(this.player);
+                this.videoThread.start();
+            }
+        }
+    }
+
+    /**
+     * videoRelease
+     */
+    private void videoRelease() {
+        if (this.filePath != null) {
+            this.player.setStatus(VideoRunnable.STATUS.PAUSED);
+            if (this.videoThread != null && videoThread.isAlive()) {
+                try {
+                    Log.d(TAG, "join");
+                    this.videoThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            this.player.release();
+            this.player.setStatus(VideoRunnable.STATUS.VIDEO_SELECTED);
+        }
+    }
+
+    /**
+     * touchExpandContract
+     *
+     * @param view        video surface view
+     * @param motionEvent motion event
+     */
+    private void touchExpandContract(VideoSurfaceView view, MotionEvent motionEvent) {
+        if (motionEvent.getPointerCount() == 1) {
+            Log.d(TAG, "move");
+            view.move(motionEvent);
+        } else if (motionEvent.getPointerCount() == 2) {
+            Log.d(TAG, "scale");
+            view.setGestureMotionEvent(motionEvent);
+        }
+    }
+
+    /**
+     * touchFrameControl
+     *
+     * @param motionEvent motion event
+     */
+    private void touchFrameControl(MotionEvent motionEvent) {
+        int touchXDiffLevel;
+        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+            this.touchStartX = motionEvent.getX();
+            this.touchXDiffLevelLast = 0;
+            Log.d(TAG, "Diff Level : " + this.touchXDiffLevelLast);
+        } else if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
+            int diffX = (int) (motionEvent.getX() - this.touchStartX);
+            Log.d(TAG, "diff x : " + diffX);
+
+            touchXDiffLevel = diffX / TOUCH_X_DIFF_SIZE;
+            Log.d(TAG, "Diff Level : " + this.touchXDiffLevelLast + " => " + touchXDiffLevel);
+            if (this.player != null && player.getStatus() == VideoRunnable.STATUS.PAUSED) {
+                if (this.touchXDiffLevelLast < touchXDiffLevel) {
+                    videoForward();
+                } else if (this.touchXDiffLevelLast > touchXDiffLevel) {
+                    videoBackward();
+                }
+                this.touchXDiffLevelLast = touchXDiffLevel;
+            }
+        }
+    }
+
+    /**
+     * videoPause
+     */
+    private void videoPause() {
+        Log.d(TAG, "videoPause");
+        if (this.videoThread.isAlive()) {
+            Log.d(TAG, "interrupt");
+            this.videoThread.interrupt();
+        }
+        this.player.setStatus(VideoRunnable.STATUS.PAUSED);
+        this.viewController.setVisibility(VideoRunnable.STATUS.PAUSED);
+    }
+
+    /**
+     * videoSeek
+     *
+     * @param progress video progress
+     */
+    private void videoSeek(int progress) {
+        Log.d(TAG, "videoSeek");
+        if (this.player.getStatus() == VideoRunnable.STATUS.SEEKING) {
+            return;
+        }
+        if (this.videoThread.isAlive()) {
+            try {
+                Log.d(TAG, "join");
+                this.videoThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        this.player.seekTo(progress);
+        this.player.setStatus(VideoRunnable.STATUS.SEEKING);
+        this.viewController.setVisibility(VideoRunnable.STATUS.SEEKING);
+        this.videoThread = new Thread(this.player);
+        this.videoThread.start();
     }
 
     /**
      * logMetaData
      *
-     * @param aRetriever media meta data retriever
+     * @param retriever media meta data retriever
      */
-    private void logMetaData(MediaMetadataRetriever aRetriever) {
+    private void logMetaData(MediaMetadataRetriever retriever) {
         Log.d(TAG, "logMetaData");
 
         Log.d(TAG, "==================================================");
-        Log.d(TAG, "has audio  :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_AUDIO));
-        Log.d(TAG, "has video  :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO));
-        Log.d(TAG, "date       :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE));
-        Log.d(TAG, "width      :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
-        Log.d(TAG, "height     :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-        Log.d(TAG, "duration   :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-        Log.d(TAG, "rotation   :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
-        Log.d(TAG, "num tracks :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS));
-        Log.d(TAG, "title      :" + aRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+        Log.d(TAG, "has audio  :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_AUDIO));
+        Log.d(TAG, "has video  :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO));
+        Log.d(TAG, "date       :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE));
+        Log.d(TAG, "width      :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+        Log.d(TAG, "height     :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+        Log.d(TAG, "duration   :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+        Log.d(TAG, "rotation   :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
+        Log.d(TAG, "num tracks :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS));
+        Log.d(TAG, "title      :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
         Log.d(TAG, "==================================================");
     }
 

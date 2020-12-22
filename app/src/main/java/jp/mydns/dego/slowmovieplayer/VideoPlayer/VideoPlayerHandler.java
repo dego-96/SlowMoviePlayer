@@ -10,32 +10,73 @@ import jp.mydns.dego.slowmovieplayer.ViewController;
 
 public class VideoPlayerHandler extends Handler {
 
+    // ---------------------------------------------------------------------------------------------
+    // inner class
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // public constant values
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // private constant values
+    // ---------------------------------------------------------------------------------------------
     private static final String TAG = "VideoPlayerHandler";
 
-    private final WeakReference<ViewController> mViewControllerRef;
     static final String MESSAGE_PROGRESS_US = "MESSAGE_PROGRESS_US";
     static final String MESSAGE_STATUS = "MESSAGE_STATUS";
 
-    VideoPlayerHandler(ViewController aViewController) {
+    // ---------------------------------------------------------------------------------------------
+    // private fields
+    // ---------------------------------------------------------------------------------------------
+    private final WeakReference<ViewController> viewControllerRef;
+
+    // ---------------------------------------------------------------------------------------------
+    // static fields
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // private static method
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // constructor
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * VideoPlayerHandler
+     *
+     * @param viewController view controller
+     */
+    VideoPlayerHandler(ViewController viewController) {
         super();
         Log.d(TAG, "VideoPlayerHandler");
-        mViewControllerRef = new WeakReference<>(aViewController);
+        this.viewControllerRef = new WeakReference<>(viewController);
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // public method
+    // ---------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------
+    // private method (package private)
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * handleMessage
+     *
+     * @param message message
+     */
     @Override
-    public void handleMessage(Message aMessage) {
+    public void handleMessage(Message message) {
         Log.d(TAG, "handleMessage");
 
-        long time_us = aMessage.getData().getLong(MESSAGE_PROGRESS_US);
+        long time_us = message.getData().getLong(MESSAGE_PROGRESS_US);
         Log.d(TAG, "progress time (us) : " + time_us);
         if (time_us >= 0) {
-            mViewControllerRef.get().setProgress((int) (time_us / 1000));
+            this.viewControllerRef.get().setProgress((int) (time_us / 1000));
         }
 
-        VideoRunnable.STATUS status = (VideoRunnable.STATUS) aMessage.getData().getSerializable(MESSAGE_STATUS);
+        VideoRunnable.STATUS status = (VideoRunnable.STATUS) message.getData().getSerializable(MESSAGE_STATUS);
         if (status != null) {
             Log.d(TAG, "status : " + status.name() + " (" + status + ")");
-            mViewControllerRef.get().setVisibility(status);
+            this.viewControllerRef.get().setVisibility(status);
         }
     }
 }

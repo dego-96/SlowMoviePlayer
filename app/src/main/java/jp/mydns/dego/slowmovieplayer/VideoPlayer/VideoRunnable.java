@@ -94,7 +94,6 @@ public class VideoRunnable implements Runnable {
 
     private MediaCodec decoder;
     private MediaExtractor extractor;
-    //    private int frameRate;
     //    private long lastRenderTime;
     private int offsetFromKeyFrame;
     //    private int offsetTarget;
@@ -158,7 +157,7 @@ public class VideoRunnable implements Runnable {
             case VIDEO_SELECTED:
             case FORWARD:
             case SEEKING:
-                this.oneShot();
+                this.oneFrame();
                 break;
             case BACKWARD:
                 break;
@@ -336,6 +335,9 @@ public class VideoRunnable implements Runnable {
     // private method
     // ---------------------------------------------------------------------------------------------
 
+    /**
+     * play
+     */
     private void play() {
         Log.d(TAG_THREAD, "play");
         this.setStatus(STATUS.PLAYING);
@@ -363,8 +365,11 @@ public class VideoRunnable implements Runnable {
         this.setStatus(STATUS.PAUSED);
     }
 
-    private void oneShot() {
-        Log.d(TAG_THREAD, "oneShot");
+    /**
+     * oneFrame
+     */
+    private void oneFrame() {
+        Log.d(TAG_THREAD, "oneFrame");
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         boolean isEos = false;
         this.frameCount = 0;
