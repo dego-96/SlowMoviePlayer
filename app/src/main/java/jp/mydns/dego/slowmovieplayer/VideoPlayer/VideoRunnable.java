@@ -19,21 +19,20 @@ public class VideoRunnable implements Runnable {
     private class VideoTimer {
         long startTime;
         long startTimeSys;
+        long sampleTime;
         long renderTime;
+        long count;
         double speed;
         boolean isInterrupted;
 
-        VideoTimer(MediaExtractor extractor, double speed) {
+        VideoTimer() {
             this.renderTime = 0;
-            this.speed = speed;
+            this.speed = VideoRunnable.this.playSpeed;
             this.isInterrupted = false;
 
-            this.start(extractor);
-        }
-
-        void start(MediaExtractor extractor) {
-            this.startTime = extractor.getSampleTime();
+            this.startTime = VideoRunnable.this.extractor.getSampleTime();
             this.startTimeSys = System.nanoTime() / 1000;
+            this.count = 0;
 
             Log.d(TAG_THREAD, "-------- start time --------");
             Log.d(TAG_THREAD, "system : " + this.startTimeSys);
@@ -41,13 +40,18 @@ public class VideoRunnable implements Runnable {
             Log.d(TAG_THREAD, "----------------------------");
         }
 
-        void render(long renderTime) {
-            this.renderTime = renderTime;
+        void setSampleTime() {
+            this.sampleTime = VideoRunnable.this.extractor.getSampleTime();
+        }
+
+        void render() {
+            this.renderTime = this.sampleTime;
+            this.count++;
         }
 
         void waitNext() {
             long elapsed;
-            long waitTime = this.renderTime - startTime;
+            long waitTime = this.renderTime - this.startTime;
             do {
                 // 再生速度に合わせてシステム時間の経過スピードを変える
                 elapsed = (long) ((System.nanoTime() / 1000.0 - this.startTimeSys) * this.speed);
@@ -58,6 +62,10 @@ public class VideoRunnable implements Runnable {
                     this.isInterrupted = true;
                 }
             } while (elapsed < waitTime);
+        }
+
+        long getCount() {
+            return this.count;
         }
     }
 
@@ -94,13 +102,7 @@ public class VideoRunnable implements Runnable {
 
     private MediaCodec decoder;
     private MediaExtractor extractor;
-    //    private long lastRenderTime;
-    private int offsetFromKeyFrame;
-    //    private int offsetTarget;
-    private long lastKeyFrameTime;
-
-    private double playbackSpeed;
-    private long frameCount;
+    private double playSpeed;
 
     // ---------------------------------------------------------------------------------------------
     // static fields
@@ -202,7 +204,7 @@ public class VideoRunnable implements Runnable {
         this.prepare(filePath);
 
         this.setStatus(STATUS.VIDEO_SELECTED);
-        this.playbackSpeed = 1.0;
+        this.playSpeed = 1.0;
     }
 
     /**
@@ -246,8 +248,6 @@ public class VideoRunnable implements Runnable {
                 }
             }
         }
-        this.offsetFromKeyFrame = 0;
-        this.lastKeyFrameTime = 0;
         if (this.decoder != null) {
             this.decoder.start();
         }
@@ -262,6 +262,7 @@ public class VideoRunnable implements Runnable {
         Log.d(TAG, "seekTo (" + aProgress + ")");
         this.decoder.flush();
         this.extractor.seekTo(aProgress * 1000, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
+        Log.d(TAG_THREAD, "sample flag : " + this.extractor.getSampleFlags());
     }
 
     /**
@@ -270,13 +271,6 @@ public class VideoRunnable implements Runnable {
     void backward() {
         Log.d(TAG, "backward");
         this.decoder.flush();
-//        if (this.offsetFromKeyFrame <= 0) {
-//            this.extractor.seekTo(this.lastKeyFrameTime - 1000000, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
-//            this.offsetTarget = this.frameRate - 1;
-//        } else {
-//            this.extractor.seekTo(this.lastKeyFrameTime, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
-//            this.offsetTarget = this.offsetFromKeyFrame - 1;
-//        }
     }
 
     /**
@@ -318,7 +312,7 @@ public class VideoRunnable implements Runnable {
      * @return playback speed
      */
     double getSpeed() {
-        return this.playbackSpeed;
+        return this.playSpeed;
     }
 
     /**
@@ -328,7 +322,7 @@ public class VideoRunnable implements Runnable {
      */
     void setSpeed(double speed) {
         Log.d(TAG, "setSpeed(" + speed + ")");
-        this.playbackSpeed = speed;
+        this.playSpeed = speed;
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -344,14 +338,15 @@ public class VideoRunnable implements Runnable {
 
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         boolean isEos = false;
-        this.frameCount = 0;
 
-        VideoTimer timer = new VideoTimer(this.extractor, this.playbackSpeed);
+        VideoTimer timer = new VideoTimer();
 
         while (!Thread.currentThread().isInterrupted() && !timer.isInterrupted) {
+            Log.d(TAG_THREAD, "sample flag : " + this.extractor.getSampleFlags());
             if (!isEos) {
                 isEos = queueInput();
             }
+            timer.setSampleTime();
 
             queueOutput(info, timer);
 
@@ -372,14 +367,15 @@ public class VideoRunnable implements Runnable {
         Log.d(TAG_THREAD, "oneFrame");
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         boolean isEos = false;
-        this.frameCount = 0;
 
-        VideoTimer timer = new VideoTimer(this.extractor, this.playbackSpeed);
+        VideoTimer timer = new VideoTimer();
 
         while (!Thread.currentThread().isInterrupted() && !timer.isInterrupted) {
+            Log.d(TAG_THREAD, "sample flag : " + this.extractor.getSampleFlags());
             if (!isEos) {
                 isEos = queueInput();
             }
+            timer.setSampleTime();
 
             boolean render = queueOutput(info, timer);
 
@@ -396,16 +392,19 @@ public class VideoRunnable implements Runnable {
         }
     }
 
+    /**
+     * queueInput
+     *
+     * @return is EOS
+     */
     private boolean queueInput() {
         int inIndex = this.decoder.dequeueInputBuffer(10000);
         Log.d(TAG_THREAD, "Input Buffer Index : " + inIndex);
         if (inIndex >= 0) {
             ByteBuffer buffer = this.decoder.getInputBuffer(inIndex);
             int sampleSize = (buffer != null) ? this.extractor.readSampleData(buffer, 0) : -1;
-            Log.d(TAG_THREAD, "sample size : " + sampleSize);
             if (sampleSize >= 0) {
-                long sampleTime = (long) ((double) this.extractor.getSampleTime() / this.playbackSpeed);
-                Log.d(TAG_THREAD, "sample time : " + sampleTime);
+                long sampleTime = (long) ((double) this.extractor.getSampleTime() / this.playSpeed);
                 this.decoder.queueInputBuffer(inIndex, 0, sampleSize, sampleTime, 0);
                 this.extractor.advance();
             } else {
@@ -417,6 +416,13 @@ public class VideoRunnable implements Runnable {
         return false;
     }
 
+    /**
+     * queueOutput
+     *
+     * @param info  Buffer Information
+     * @param timer video timer
+     * @return is rendered
+     */
     private boolean queueOutput(MediaCodec.BufferInfo info, VideoTimer timer) {
         boolean render = false;
 
@@ -429,34 +435,17 @@ public class VideoRunnable implements Runnable {
             Log.d(TAG_THREAD, "INFO_TRY_AGAIN_LATER");
         } else {
             if (outIndex >= 0) {
-                if ((info.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0) {
-                    this.offsetFromKeyFrame = 0;
-                    this.lastKeyFrameTime = this.extractor.getSampleTime();
-                    Log.d(TAG_THREAD, "key frame !!!!!   (" + this.lastKeyFrameTime + " us)");
-                } else {
-                    this.offsetFromKeyFrame++;
-                    Log.d(TAG_THREAD, "key frame offset : " + this.offsetFromKeyFrame
-                            + "  (" + this.extractor.getSampleTime() + " us)");
-                }
-
-                this.frameCount++;
-
                 timer.waitNext();
 
-                if (this.playbackSpeed <= 1.0 || (this.frameCount % (int) this.playbackSpeed) == 0) {
-                    this.decoder.releaseOutputBuffer(outIndex, true);
-                    timer.render(this.extractor.getSampleTime());
-                    render = true;
-                }
+                render = (this.playSpeed <= 1.0 || (timer.getCount() % (int) this.playSpeed) == 0);
+                this.decoder.releaseOutputBuffer(outIndex, render);
+                timer.render();
+                render = true;
 
-                if (info.presentationTimeUs > 0 || timer.renderTime > 0) {
-                    Log.d(TAG_THREAD, "presentationTimeUs : " + info.presentationTimeUs);
-                    Log.d(TAG_THREAD, "render time        : " + timer.renderTime);
-                    if (this.playbackSpeed > 1.0) {
-                        this.setProgress((long) ((double) info.presentationTimeUs * this.playbackSpeed));
-                    } else {
-                        this.setProgress(info.presentationTimeUs);
-                    }
+                Log.d(TAG_THREAD, "presentationTimeUs : " + info.presentationTimeUs);
+                if (info.presentationTimeUs > 0 ||
+                    (this.getStatus() == STATUS.VIDEO_SELECTED && info.presentationTimeUs >= 0)) {
+                    this.setProgress((long) ((double) info.presentationTimeUs * this.playSpeed));
                 }
             }
         }

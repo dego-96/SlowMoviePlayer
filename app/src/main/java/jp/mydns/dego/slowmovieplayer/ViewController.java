@@ -57,7 +57,7 @@ public class ViewController {
     private ImageView expandImageView;
     private ImageView frameControlImageView;
     private SeekBar seekBar;
-    private TextView playbackSpeedTextView;
+    private TextView playSpeedTextView;
     private TextView currentTimeTextView;
     private TextView remainTimeTextView;
 
@@ -97,7 +97,7 @@ public class ViewController {
         this.expandImageView = activity.findViewById(R.id.button_expand_contract);
         this.frameControlImageView = activity.findViewById(R.id.button_frame_control);
         this.seekBar = activity.findViewById(R.id.seek_bar_progress);
-        this.playbackSpeedTextView = activity.findViewById(R.id.text_view_speed);
+        this.playSpeedTextView = activity.findViewById(R.id.text_view_speed);
         this.currentTimeTextView = activity.findViewById(R.id.text_view_current_time);
         this.remainTimeTextView = activity.findViewById(R.id.text_view_remain_time);
 
@@ -188,7 +188,7 @@ public class ViewController {
                 this.expandImageView.setVisibility(View.GONE);
                 this.frameControlImageView.setVisibility(View.GONE);
                 this.seekBar.setVisibility(View.GONE);
-                this.playbackSpeedTextView.setVisibility(View.GONE);
+                this.playSpeedTextView.setVisibility(View.GONE);
                 this.currentTimeTextView.setVisibility(View.GONE);
                 this.remainTimeTextView.setVisibility(View.GONE);
                 break;
@@ -206,7 +206,7 @@ public class ViewController {
                 this.expandImageView.setVisibility(View.INVISIBLE);
                 this.frameControlImageView.setVisibility(View.INVISIBLE);
                 this.seekBar.setVisibility(View.VISIBLE);
-                this.playbackSpeedTextView.setVisibility(View.VISIBLE);
+                this.playSpeedTextView.setVisibility(View.VISIBLE);
                 this.currentTimeTextView.setVisibility(View.VISIBLE);
                 this.remainTimeTextView.setVisibility(View.VISIBLE);
                 break;
@@ -229,7 +229,7 @@ public class ViewController {
                 this.expandImageView.setVisibility(View.VISIBLE);
                 this.frameControlImageView.setVisibility(View.VISIBLE);
                 this.seekBar.setVisibility(View.VISIBLE);
-                this.playbackSpeedTextView.setVisibility(View.VISIBLE);
+                this.playSpeedTextView.setVisibility(View.VISIBLE);
                 this.currentTimeTextView.setVisibility(View.VISIBLE);
                 this.remainTimeTextView.setVisibility(View.VISIBLE);
                 break;
@@ -272,21 +272,21 @@ public class ViewController {
     /**
      * setPlaySpeed
      *
-     * @param speed playback speed
+     * @param speed play speed
      */
     public void setPlaySpeedText(double speed) {
-        Log.d(TAG, "setPlaybackSpeed");
+        Log.d(TAG, "setPlaySpeed");
 
         if (3.0 < speed) {
-            this.playbackSpeedTextView.setText(this.activity.getString(R.string.playback_speed_x4_0));
+            this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x4_0));
         } else if (1.5 < speed) {
-            this.playbackSpeedTextView.setText(this.activity.getString(R.string.playback_speed_x2_0));
+            this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x2_0));
         } else if (0.8 < speed) {
-            this.playbackSpeedTextView.setText(this.activity.getString(R.string.playback_speed_init));
+            this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_init));
         } else if (0.4 < speed) {
-            this.playbackSpeedTextView.setText(this.activity.getString(R.string.playback_speed_x1_2));
+            this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x1_2));
         } else {
-            this.playbackSpeedTextView.setText(this.activity.getString(R.string.playback_speed_x1_4));
+            this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x1_4));
         }
     }
 

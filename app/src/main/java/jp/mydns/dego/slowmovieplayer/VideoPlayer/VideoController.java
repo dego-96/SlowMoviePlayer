@@ -207,6 +207,7 @@ public class VideoController {
         if (this.videoThread.isAlive()) {
             try {
                 Log.d(TAG, "join");
+                this.videoThread.interrupt();
                 this.videoThread.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();

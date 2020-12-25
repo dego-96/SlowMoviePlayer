@@ -129,7 +129,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal|top"
-                    android:text="@string/playback_speed_init"
+                    android:text="@string/play_speed_init"
                     android:textColor="@android:color/white"
                     android:textSize="15sp"
                     android:visibility="invisible" />
