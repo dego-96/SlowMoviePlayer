@@ -246,7 +246,7 @@ public class VideoController {
             Log.d(TAG, "Thread is alive.");
             return;
         }
-        this.player.backward();
+        this.player.toPreviousKeyFrame();
         this.player.setStatus(VideoRunnable.STATUS.BACKWARD);
         this.viewController.setVisibility(VideoRunnable.STATUS.BACKWARD);
         this.videoThread = new Thread(this.player);
