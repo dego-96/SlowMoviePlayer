@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -59,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
      * @param savedInstanceState savedInstanceState
      */
     @Override
-    protected void onCreate(Bundle aSavedInstanceState) {
-        super.onCreate(aSavedInstanceState);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initialize();
     }
