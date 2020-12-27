@@ -9,8 +9,10 @@
     <string name="content_button_speed_down">Speed Down</string>
     <string name="content_button_play">Play</string>
     <string name="content_button_stop">Stop</string>
+    <string name="content_button_expand_contract">Mode Expand/Contract</string>
+    <string name="content_button_frame_control">Mode Frame Control</string>
     <string name="no_video">No Video</string>
-    <string name="playback_speed_init">x1.0</string>
+    <string name="play_speed_init">x1.0</string>
     <string name="current_time_init">00:00:000</string>
     <string name="remain_time_init">--:--:---</string>
 
@@ -19,8 +21,8 @@
     <string name="toast_no_video">動画を取得できませんでした。</string>
 
     <!-- Playback Speed -->
-    <string name="playback_speed_x1_4">x1/4</string>
-    <string name="playback_speed_x1_2">x1/2</string>
-    <string name="playback_speed_x2_0">x2.0</string>
-    <string name="playback_speed_x4_0">x4.0</string>
+    <string name="play_speed_x1_4">x1/4</string>
+    <string name="play_speed_x1_2">x1/2</string>
+    <string name="play_speed_x2_0">x2.0</string>
+    <string name="play_speed_x4_0">x4.0</string>
 </resources>

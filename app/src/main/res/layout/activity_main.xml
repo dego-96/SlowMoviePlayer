@@ -65,6 +65,39 @@
             android:visibility="invisible" />
 
         <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|top"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <!-- Mode Expand/Contract -->
+            <ImageView
+                android:id="@+id/button_expand_contract"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_margin="10dp"
+                android:clickable="false"
+                android:contentDescription="@string/content_button_expand_contract"
+                android:onClick="onExpandButtonClicked"
+                android:src="@drawable/expand"
+                android:visibility="invisible" />
+
+            <!-- Mode Frame Control -->
+            <ImageView
+                android:id="@+id/button_frame_control"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_margin="10dp"
+                android:clickable="false"
+                android:contentDescription="@string/content_button_expand_contract"
+                android:onClick="onFrameControlButtonClicked"
+                android:src="@drawable/frame_control"
+                android:visibility="invisible" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/layout_seek_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -96,7 +129,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal|top"
-                    android:text="@string/playback_speed_init"
+                    android:text="@string/play_speed_init"
                     android:textColor="@android:color/white"
                     android:textSize="15sp"
                     android:visibility="invisible" />
@@ -123,7 +156,7 @@
                 android:layout_height="20dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
-                android:layout_marginBottom="50dp"
+                android:layout_marginBottom="60dp"
                 android:visibility="invisible" />
         </LinearLayout>
 

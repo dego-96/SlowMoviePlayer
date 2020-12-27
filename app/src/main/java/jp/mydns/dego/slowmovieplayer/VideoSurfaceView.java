@@ -11,54 +11,83 @@ import android.view.SurfaceView;
 
 public class VideoSurfaceView extends SurfaceView {
 
-//    private static final String TAG = "VideoSurfaceView";
-
+    // ---------------------------------------------------------------------------------------------
+    // inner class
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // public constant values
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // private constant values
+    // ---------------------------------------------------------------------------------------------
+    private static final String TAG = "VideoSurfaceView";
     private static final float MINIMUM_SCALE = 0.5f;
     private static final float MAXIMUM_SCALE = 4.0f;
 
-    private ScaleGestureDetector mScaleGestureDetector;
-    private float mScale;
-    private int mInitialWidth;
-    private int mInitialHeight;
-    private boolean mCanChangeLayout;
-    private Display mDisplay;
-    private Point mDisplayCenter;
-    private Point mCenterPointStart;
-    private int mMoveX;
-    private int mMoveY;
+    // ---------------------------------------------------------------------------------------------
+    // private fields
+    // ---------------------------------------------------------------------------------------------
+    private ScaleGestureDetector scaleGestureDetector;
+    private float scale;
+    private int initialWidth;
+    private int initialHeight;
+    private boolean canChangeLayout;
+    private Display display;
+    private Point displayCenter;
+    private Point moveStart;
+    private int moveX;
+    private int moveY;
+    private boolean isMove;
+
+    // ---------------------------------------------------------------------------------------------
+    // static fields
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // private static method
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // constructor
+    // ---------------------------------------------------------------------------------------------
 
     /**
      * VideoSurfaceView
      *
-     * @param aContext context
+     * @param context context
      */
-    public VideoSurfaceView(Context aContext) {
-        super(aContext);
-        init(aContext);
+    public VideoSurfaceView(Context context) {
+        super(context);
+        Log.d(TAG, "VideoSurfaceView");
+        init(context);
     }
 
     /**
      * VideoSurfaceView
      *
-     * @param aContext      context
-     * @param aAttributeSet attribute set
+     * @param context      context
+     * @param attributeSet attribute set
      */
-    public VideoSurfaceView(Context aContext, AttributeSet aAttributeSet) {
-        super(aContext, aAttributeSet);
-        init(aContext);
+    public VideoSurfaceView(Context context, AttributeSet attributeSet) {
+        super(context, attributeSet);
+        Log.d(TAG, "VideoSurfaceView");
+        init(context);
     }
 
     /**
      * VideoSurfaceView
      *
-     * @param aContext      context
-     * @param aAttributeSet attribute set
+     * @param context      context
+     * @param attributeSet attribute set
      * @param defStyleAttr  define style attribute
      */
-    public VideoSurfaceView(Context aContext, AttributeSet aAttributeSet, int defStyleAttr) {
-        super(aContext, aAttributeSet, defStyleAttr);
-        init(aContext);
+    public VideoSurfaceView(Context context, AttributeSet attributeSet, int defStyleAttr) {
+        super(context, attributeSet, defStyleAttr);
+        Log.d(TAG, "VideoSurfaceView");
+        init(context);
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // public method
+    // ---------------------------------------------------------------------------------------------
 
     /**
      * performClick
@@ -72,38 +101,59 @@ public class VideoSurfaceView extends SurfaceView {
     }
 
     /**
-     * onTouchEvent
+     * setGestureMotionEvent
      *
-     * @param aEvent motion event
-     * @return touch result
+     * @param event motion event
      */
-    @Override
-    public boolean onTouchEvent(MotionEvent aEvent) {
-        super.performClick();
-        int pointerCount = aEvent.getPointerCount();
-        if (pointerCount == 2) {
-            mScaleGestureDetector.onTouchEvent(aEvent);
-        } else if (pointerCount == 3) {
-            int action = aEvent.getActionMasked();
-            float x = (aEvent.getX(0) + aEvent.getX(1) + aEvent.getX(2)) / 3.0f;
-            float y = (aEvent.getY(0) + aEvent.getY(1) + aEvent.getY(2)) / 3.0f;
-            if (action == MotionEvent.ACTION_POINTER_DOWN) {
-                mCenterPointStart = new Point((int) x, (int) y);
-            } else if (action == MotionEvent.ACTION_POINTER_UP) {
-                mCenterPointStart = null;
-            } else {
-                move((int) x - mCenterPointStart.x, (int) y - mCenterPointStart.y);
-            }
-
-            aEvent.getX(0);
-        }
-        return true;
+    public void setGestureMotionEvent(MotionEvent event)
+    {
+        Log.d(TAG, "setGestureMotionEvent");
+        this.isMove = false;
+        this.scaleGestureDetector.onTouchEvent(event);
     }
 
+    /**
+     * move
+     *
+     * @param event Motion Event
+     */
+    public void move(MotionEvent event) {
+        int x = (int) event.getX();
+        int y = (int) event.getY();
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            this.isMove = true;
+            this.moveStart = new Point(x, y);
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            this.moveStart = null;
+            this.isMove = false;
+        } else if (this.isMove && event.getAction() == MotionEvent.ACTION_MOVE) {
+            int dx = x - this.moveStart.x;
+            int dy = y - this.moveStart.y;
+            this.moveX += dx;
+            this.moveY += dy;
+
+            int left = this.getLeft() + dx;
+            int top = this.getTop() + dy;
+            int right = this.getRight() + dx;
+            int bottom = this.getBottom() + dy;
+
+            limit(left, top, right, bottom);
+        }
+    }
+
+    /**
+     * layout
+     *
+     * @param l left
+     * @param t top
+     * @param r right
+     * @param b bottom
+     */
     @Override
     public void layout(int l, int t, int r, int b) {
 
-        if (mCanChangeLayout) {
+        if (this.canChangeLayout) {
+            Log.d(TAG, "call super.layout(...)");
             super.layout(l, t, r, b);
         }
     }
@@ -111,33 +161,40 @@ public class VideoSurfaceView extends SurfaceView {
     /**
      * setInitialSize
      *
-     * @param aWidth  width
-     * @param aHeight height
+     * @param width  width
+     * @param height height
      */
-    void setInitialSize(int aWidth, int aHeight) {
-        mInitialWidth = aWidth;
-        mInitialHeight = aHeight;
+    void setInitialSize(int width, int height) {
+        Log.d(TAG, "setInitialSize(" + width + ", " + height + ")");
+        this.initialWidth = width;
+        this.initialHeight = height;
 
-        if (mDisplay == null) {
+        if (this.display == null) {
             return;
         }
 
-        int left = mDisplayCenter.x - (mInitialWidth / 2);
-        int top = mDisplayCenter.y - (mInitialHeight / 2);
-        int right = mDisplayCenter.x + (mInitialWidth / 2);
-        int bottom = mDisplayCenter.y + (mInitialHeight / 2);
-        mCanChangeLayout = true;
+        int left = this.displayCenter.x - (this.initialWidth / 2);
+        int top = this.displayCenter.y - (this.initialHeight / 2);
+        int right = this.displayCenter.x + (this.initialWidth / 2);
+        int bottom = this.displayCenter.y + (this.initialHeight / 2);
+        this.canChangeLayout = true;
         this.layout(left, top, right, bottom);
-        mCanChangeLayout = false;
+        this.canChangeLayout = false;
+        Log.d(TAG, "(l, t, r, b) : (" + left + ", " + top + ", " + right + ", " + bottom + ")");
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // private method (package private)
+    // ---------------------------------------------------------------------------------------------
 
     /**
      * init
      *
-     * @param aContext context
+     * @param context context
      */
-    private void init(Context aContext) {
-        mScaleGestureDetector = new ScaleGestureDetector(aContext, new ScaleGestureDetector.OnScaleGestureListener() {
+    private void init(Context context) {
+        Log.d(TAG, "init");
+        this.scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
                 resize(detector.getScaleFactor());
@@ -155,68 +212,55 @@ public class VideoSurfaceView extends SurfaceView {
             }
         });
 
-        mScale = 1.0f;
-        mInitialWidth = 0;
-        mInitialHeight = 0;
-        mCanChangeLayout = true;
-        mMoveX = 0;
-        mMoveY = 0;
+        this.scale = 1.0f;
+        this.initialWidth = 0;
+        this.initialHeight = 0;
+        this.canChangeLayout = true;
+        this.moveX = 0;
+        this.moveY = 0;
+        this.isMove = false;
 
-        if (aContext instanceof Activity) {
-            mDisplay = ((Activity) aContext).getWindowManager().getDefaultDisplay();
-            mDisplayCenter = new Point();
-            mDisplay.getSize(mDisplayCenter);
-            mDisplayCenter.x = mDisplayCenter.x / 2;
-            mDisplayCenter.y = mDisplayCenter.y / 2;
+        if (context instanceof Activity) {
+            this.display = ((Activity) context).getWindowManager().getDefaultDisplay();
+            this.displayCenter = new Point();
+            this.display.getSize(this.displayCenter);
+            this.displayCenter.x = this.displayCenter.x / 2;
+            this.displayCenter.y = this.displayCenter.y / 2;
+            Log.d(TAG, "display center : (" + this.displayCenter.x + ", " + this.displayCenter.y + ")");
         } else {
-            mDisplay = null;
+            this.display = null;
         }
     }
 
     /**
      * resize
      *
-     * @param aScale scale
+     * @param scale scale
      */
-    private void resize(float aScale) {
-        if (mDisplay == null) {
+    private void resize(float scale) {
+        Log.d(TAG, "resize");
+        if (this.display == null) {
             return;
         }
 
         /* calc scale */
-        mScale *= aScale;
-        if (mScale > MAXIMUM_SCALE) {
-            mScale = MAXIMUM_SCALE;
-        } else if (mScale < MINIMUM_SCALE) {
-            mScale = MINIMUM_SCALE;
+        this.scale *= scale;
+        if (this.scale > MAXIMUM_SCALE) {
+            this.scale = MAXIMUM_SCALE;
+        } else if (this.scale < MINIMUM_SCALE) {
+            this.scale = MINIMUM_SCALE;
         }
+        Log.d(TAG, "scale : " + this.scale);
 
-        int width = (int) ((float) mInitialWidth * mScale);
-        int height = (int) ((float) mInitialHeight * mScale);
+        int width = (int) ((float) this.initialWidth * this.scale);
+        int height = (int) ((float) this.initialHeight * this.scale);
+        Log.d(TAG, "(w, h) : (" + width + ", " + height + ")");
 
-        int left = mDisplayCenter.x - (width / 2) + mMoveX;
-        int top = mDisplayCenter.y - (height / 2) + mMoveY;
-        int right = mDisplayCenter.x + (width / 2) + mMoveX;
-        int bottom = mDisplayCenter.y + (height / 2) + mMoveY;
-
-        limit(left, top, right, bottom);
-    }
-
-    /**
-     * move
-     *
-     * @param aMoveX move x
-     * @param aMoveY move y
-     */
-    private void move(int aMoveX, int aMoveY) {
-
-        mMoveX += aMoveX;
-        mMoveY += aMoveY;
-
-        int left = this.getLeft() + aMoveX;
-        int top = this.getTop() + aMoveY;
-        int right = this.getRight() + aMoveX;
-        int bottom = this.getBottom() + aMoveY;
+        int left = this.displayCenter.x - (width / 2) + this.moveX;
+        int top = this.displayCenter.y - (height / 2) + this.moveY;
+        int right = this.displayCenter.x + (width / 2) + this.moveX;
+        int bottom = this.displayCenter.y + (height / 2) + this.moveY;
+        Log.d(TAG, "(l, t, r, b) : (" + left + ", " + top + ", " + right + ", " + bottom + ")");
 
         limit(left, top, right, bottom);
     }
@@ -231,58 +275,60 @@ public class VideoSurfaceView extends SurfaceView {
      */
     private void limit(int left, int top, int right, int bottom) {
         // 横位置の限界を設定
-        int displayWidth = mDisplayCenter.x * 2;
+        int displayWidth = this.displayCenter.x * 2;
         int movieWidth = right - left;
-        if (movieWidth < displayWidth) {
+        if (movieWidth <= displayWidth) {
             if (left < 0) {
-                mMoveX -= left;
+                this.moveX -= left;
                 right -= left;
                 left = 0;
             } else if (right > displayWidth) {
-                mMoveX -= right - displayWidth;
+                this.moveX -= right - displayWidth;
                 left -= right - displayWidth;
                 right = displayWidth;
             }
-        } else if (movieWidth > displayWidth) {
+        }
+        if (movieWidth >= displayWidth) {
             if (left > 0) {
-                mMoveX -= left;
+                this.moveX -= left;
                 right -= left;
                 left = 0;
             } else if (right < displayWidth) {
-                mMoveX += displayWidth - right;
+                this.moveX += displayWidth - right;
                 left += displayWidth - right;
                 right = displayWidth;
             }
         }
 
         // 縦位置の限界を設定
-        int displayHeight = mDisplayCenter.y * 2;
+        int displayHeight = this.displayCenter.y * 2;
         int movieHeight = bottom - top;
-        if (movieHeight < displayHeight) {
+        if (movieHeight <= displayHeight) {
             if (top < 0) {
-                mMoveY -= top;
+                this.moveY -= top;
                 bottom -= top;
                 top = 0;
             } else if (bottom > displayHeight) {
-                mMoveY -= bottom - displayHeight;
+                this.moveY -= bottom - displayHeight;
                 top -= bottom - displayHeight;
                 bottom = displayHeight;
             }
-        } else if (movieHeight > displayHeight) {
+        }
+        if (movieHeight >= displayHeight) {
             if (top > 0) {
-                mMoveY -= top;
+                this.moveY -= top;
                 bottom -= top;
                 top = 0;
             } else if (bottom < displayHeight) {
-                mMoveY += displayHeight - bottom;
+                this.moveY += displayHeight - bottom;
                 top += displayHeight - bottom;
                 bottom = displayHeight;
             }
         }
 
 
-        mCanChangeLayout = true;
+        this.canChangeLayout = true;
         this.layout(left, top, right, bottom);
-        mCanChangeLayout = false;
+        this.canChangeLayout = false;
     }
 }

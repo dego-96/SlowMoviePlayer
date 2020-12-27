@@ -16,20 +16,47 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Toast;
 
+import jp.mydns.dego.slowmovieplayer.VideoPlayer.VideoController;
+
 public class MainActivity extends AppCompatActivity {
 
-//    private static final String TAG = "MainActivity";
+    // ---------------------------------------------------------------------------------------------
+    // inner class
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // public constant values
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // private constant values
+    // ---------------------------------------------------------------------------------------------
+    private static final String TAG = "MainActivity";
     private static final int REQUEST_PERMISSION_READ_EXTERNAL_STORAGE = 10;
     private static final int REQUEST_GALLERY = 20;
 
-    private boolean mCanReadExternalStorage;
+    // ---------------------------------------------------------------------------------------------
+    // private fields
+    // ---------------------------------------------------------------------------------------------
+    private boolean canReadExternalStorage;
+    private VideoController videoController;
 
-    private VideoController mVideoController;
+    // ---------------------------------------------------------------------------------------------
+    // static fields
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // private static method
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+    // constructor
+    // ---------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------
+    // Android Life Cycle
+    // ---------------------------------------------------------------------------------------------
 
     /**
      * onCreate
      *
-     * @param aSavedInstanceState savedInstanceState
+     * @param savedInstanceState savedInstanceState
      */
     @Override
     protected void onCreate(Bundle aSavedInstanceState) {
@@ -48,12 +75,43 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * onActivityResult
+     *
+     * @param requestCode request code
+     * @param resultCode  result code
+     * @param data        received data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult");
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_PERMISSION_READ_EXTERNAL_STORAGE:
+                requestPermission(resultCode);
+                break;
+
+            case REQUEST_GALLERY:
+                requestGalleryResult(resultCode, data);
+                break;
+
+            default:
+                Log.w(TAG, "unknown request code");
+                break;
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // public method
+    // ---------------------------------------------------------------------------------------------
+
+    /**
      * onVideoSelectButtonClicked
      *
-     * @param aView button view
+     * @param view button view
      */
-    public void onVideoSelectButtonClicked(View aView) {
-        if (mCanReadExternalStorage) {
+    public void onVideoSelectButtonClicked(View view) {
+        Log.d(TAG, "onVideoSelectButtonClicked");
+        if (this.canReadExternalStorage) {
             Intent intentGallery;
             intentGallery = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             intentGallery.addCategory(Intent.CATEGORY_OPENABLE);
@@ -67,88 +125,95 @@ public class MainActivity extends AppCompatActivity {
     /**
      * onPlayButtonClicked
      *
-     * @param aView button view
+     * @param view button view
      */
-    public void onPlayButtonClicked(View aView) {
-        mVideoController.videoPlayback();
+    public void onPlayButtonClicked(View view) {
+        Log.d(TAG, "onPlayButtonClicked");
+        this.videoController.videoPlay();
     }
 
     /**
      * onStopButtonClicked
      *
-     * @param aView button view
+     * @param view button view
      */
-    public void onStopButtonClicked(View aView) {
-        mVideoController.videoStop();
+    public void onStopButtonClicked(View view) {
+        Log.d(TAG, "onStopButtonClicked");
+        this.videoController.videoStop();
     }
 
     /**
      * onForwardButtonClicked
      *
-     * @param aView button view
+     * @param view button view
      */
-    public void onForwardButtonClicked(View aView) {
-        mVideoController.videoForward();
+    public void onForwardButtonClicked(View view) {
+        Log.d(TAG, "onForwardButtonClicked");
+        this.videoController.videoForward();
     }
 
     /**
      * onBackwardButtonClicked
      *
-     * @param aView button view
+     * @param view button view
      */
-    public void onBackwardButtonClicked(View aView) {
-        mVideoController.videoBackward();
+    public void onBackwardButtonClicked(View view) {
+        Log.d(TAG, "onBackwardButtonClicked");
+        this.videoController.videoBackward();
     }
 
     /**
      * onSpeedUpButtonClicked
      *
-     * @param aView button view
+     * @param view button view
      */
-    public void onSpeedUpButtonClicked(View aView) {
-        mVideoController.videoSpeedUp();
+    public void onSpeedUpButtonClicked(View view) {
+        Log.d(TAG, "onSpeedUpButtonClicked");
+        this.videoController.videoSpeedUp();
     }
 
     /**
      * onSpeedDownButtonClicked
      *
-     * @param aView button view
+     * @param view button view
      */
-    public void onSpeedDownButtonClicked(View aView) {
-        mVideoController.videoSpeedDown();
+    public void onSpeedDownButtonClicked(View view) {
+        Log.d(TAG, "onSpeedDownButtonClicked");
+        this.videoController.videoSpeedDown();
     }
 
     /**
-     * onActivityResult
+     * onExpandButtonClicked
      *
-     * @param aRequestCode request code
-     * @param aResultCode  result code
-     * @param aData        received data
+     * @param view button view
      */
-    @Override
-    protected void onActivityResult(int aRequestCode, int aResultCode, Intent aData) {
-        super.onActivityResult(aRequestCode, aResultCode, aData);
-        switch (aRequestCode) {
-            case REQUEST_PERMISSION_READ_EXTERNAL_STORAGE:
-                requestPermission(aResultCode);
-                break;
-
-            case REQUEST_GALLERY:
-                requestGalleryResult(aResultCode, aData);
-                break;
-
-            default:
-                break;
-        }
+    public void onExpandButtonClicked(View view) {
+        Log.d(TAG, "onExpandButtonClicked");
+        this.videoController.setManipulation(VideoController.MANIPULATION.EXPAND_CONTRACT);
     }
+
+    /**
+     * onFrameControlButtonClicked
+     *
+     * @param view button view
+     */
+    public void onFrameControlButtonClicked(View view) {
+        Log.d(TAG, "onFrameControlButtonClicked");
+        this.videoController.setManipulation(VideoController.MANIPULATION.FRAME_CONTROL);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // private method (package private)
+    // ---------------------------------------------------------------------------------------------
 
     /**
      * requestPermission
      *
-     * @param aResultCode intent request code
+     * @param resultCode intent request code
      */
-    private void requestPermission(int aResultCode) {
-        if (aResultCode != Activity.RESULT_OK) {
+    private void requestPermission(int resultCode) {
+        Log.d(TAG, "requestPermission");
+        if (resultCode != Activity.RESULT_OK) {
             return;
         }
         int permission = ContextCompat.checkSelfPermission(
@@ -156,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.READ_EXTERNAL_STORAGE
         );
         if (permission != PackageManager.PERMISSION_GRANTED) {
-            mCanReadExternalStorage = false;
+            this.canReadExternalStorage = false;
             Toast.makeText(
                     this,
                     getString(R.string.toast_no_permission),
@@ -168,16 +233,18 @@ public class MainActivity extends AppCompatActivity {
     /**
      * requestGalleryResult
      *
-     * @param aResultCode intent result code
-     * @param aData       intent received data
+     * @param resultCode intent result code
+     * @param data       intent received data
      */
-    private void requestGalleryResult(int aResultCode, Intent aData) {
-        if (aResultCode == Activity.RESULT_OK) {
-            String video_path = getPathFromUri(aData);
+    private void requestGalleryResult(int resultCode, Intent data) {
+        Log.d(TAG, "requestGalleryResult");
+        if (resultCode == Activity.RESULT_OK) {
+            String video_path = getPathFromUri(data);
             if (video_path == null || "".equals(video_path)) {
                 Toast.makeText(getApplication(), getString(R.string.toast_no_video), Toast.LENGTH_SHORT).show();
             } else {
-                mVideoController.setVideoPath(video_path);
+                this.videoController.setVideoPath(video_path);
+                Log.d(TAG, "video path :" + video_path);
             }
         }
     }
@@ -186,8 +253,9 @@ public class MainActivity extends AppCompatActivity {
      * initialize
      */
     private void initialize() {
-        mVideoController = new VideoController(this);
-        mCanReadExternalStorage = false;
+        Log.d(TAG, "initialize");
+        this.videoController = new VideoController(this);
+        this.canReadExternalStorage = false;
     }
 
     /**
@@ -199,34 +267,36 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.READ_EXTERNAL_STORAGE
         );
         if (permission != PackageManager.PERMISSION_GRANTED) {
-            mCanReadExternalStorage = false;
+            this.canReadExternalStorage = false;
             ActivityCompat.requestPermissions(
                     this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     REQUEST_PERMISSION_READ_EXTERNAL_STORAGE);
         } else {
-            mCanReadExternalStorage = true;
+            this.canReadExternalStorage = true;
         }
     }
 
     /**
      * getPathFromUri
      *
-     * @param aData data
+     * @param data data
      * @return path
      */
-    private String getPathFromUri(Intent aData) {
-        if (!mCanReadExternalStorage) {
+    private String getPathFromUri(Intent data) {
+        Log.d(TAG, "getPathFromUri");
+        if (!this.canReadExternalStorage) {
+            Log.e(TAG, "can not read external storage");
             return null;
         }
 
-        Uri uri = aData.getData();
+        Uri uri = data.getData();
         if (uri == null) {
             return null;
         }
 
         String path = null;
-        int takeFlags = aData.getFlags();
+        int takeFlags = data.getFlags();
         takeFlags &= Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
 
         getContentResolver().takePersistableUriPermission(uri, takeFlags);
