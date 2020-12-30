@@ -2,13 +2,13 @@ package jp.mydns.dego.slowmovieplayer.VideoPlayer;
 
 import android.app.Activity;
 import android.media.MediaMetadataRetriever;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.SeekBar;
 
 import jp.mydns.dego.slowmovieplayer.R;
+import jp.mydns.dego.slowmovieplayer.Util.DebugLog;
 import jp.mydns.dego.slowmovieplayer.VideoSurfaceView;
 import jp.mydns.dego.slowmovieplayer.ViewController;
 
@@ -61,7 +61,7 @@ public class VideoController {
      * @param activity activity
      */
     public VideoController(final Activity activity) {
-        Log.d(TAG, "VideoController");
+        DebugLog.d(TAG, "VideoController");
         this.viewController = new ViewController(activity);
         this.viewController.setVisibility(VideoRunnable.STATUS.INIT);
         this.player = VideoRunnable.getInstance();
@@ -74,7 +74,7 @@ public class VideoController {
         this.player.setOnVideoStatusChangeListener(new OnVideoStatusChangeListener() {
             @Override
             public void onDurationChanged(int duration) {
-                Log.d(TAG, "onDurationChanged");
+                DebugLog.d(TAG, "onDurationChanged");
                 viewController.setDuration(duration);
             }
         });
@@ -83,19 +83,19 @@ public class VideoController {
         surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
-                Log.d(TAG, "surfaceCreated");
+                DebugLog.d(TAG, "surfaceCreated");
                 setSurfaceViewSize();
             }
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                Log.d(TAG, "surfaceChanged");
+                DebugLog.d(TAG, "surfaceChanged");
                 videoSuspend(holder);
             }
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
-                Log.d(TAG, "surfaceDestroyed");
+                DebugLog.d(TAG, "surfaceDestroyed");
                 videoRelease();
             }
         });
@@ -103,7 +103,7 @@ public class VideoController {
         surfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent event) {
-                Log.d(TAG, "onTouch");
+                DebugLog.d(TAG, "onTouch");
                 if (!(view instanceof VideoSurfaceView)) {
                     return false;
                 }
@@ -142,7 +142,7 @@ public class VideoController {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                Log.d(TAG, "onProgressChanged");
+                DebugLog.d(TAG, "onProgressChanged");
                 if (fromUser) {
                     videoSeek(progress);
                 }
@@ -150,13 +150,13 @@ public class VideoController {
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                Log.d(TAG, "onStartTrackingTouch");
+                DebugLog.d(TAG, "onStartTrackingTouch");
                 videoPause();
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Log.d(TAG, "onStopTrackingTouch");
+                DebugLog.d(TAG, "onStopTrackingTouch");
             }
         });
     }
@@ -179,7 +179,7 @@ public class VideoController {
      * videoPlay
      */
     public void videoPlay() {
-        Log.d(TAG, "videoPlay");
+        DebugLog.d(TAG, "videoPlay");
         if (this.player.getStatus() == VideoRunnable.STATUS.PAUSED) {
             // pause => play
             if (this.videoThread == null || !this.videoThread.isAlive()) {
@@ -203,10 +203,10 @@ public class VideoController {
      * videoStop
      */
     public void videoStop() {
-        Log.d(TAG, "videoStop");
+        DebugLog.d(TAG, "videoStop");
         if (this.videoThread.isAlive()) {
             try {
-                Log.d(TAG, "join");
+                DebugLog.d(TAG, "join");
                 this.videoThread.interrupt();
                 this.videoThread.join();
             } catch (InterruptedException e) {
@@ -225,7 +225,7 @@ public class VideoController {
      * videoForward
      */
     public void videoForward() {
-        Log.d(TAG, "videoForward");
+        DebugLog.d(TAG, "videoForward");
         if (this.videoThread.isAlive()) {
             return;
         }
@@ -241,9 +241,9 @@ public class VideoController {
      * videoBackward
      */
     public void videoBackward() {
-        Log.d(TAG, "videoBackward");
+        DebugLog.d(TAG, "videoBackward");
         if (this.videoThread.isAlive()) {
-            Log.d(TAG, "Thread is alive.");
+            DebugLog.d(TAG, "Thread is alive.");
             return;
         }
         this.player.toPreviousKeyFrame();
@@ -257,7 +257,7 @@ public class VideoController {
      * videoSpeedUp
      */
     public void videoSpeedUp() {
-        Log.d(TAG, "videoSpeedUp");
+        DebugLog.d(TAG, "videoSpeedUp");
 
         double speed = this.player.getSpeed() * 2.0;
         if (speed > SPEED_MAX) {
@@ -272,7 +272,7 @@ public class VideoController {
      * videoSpeedDown
      */
     public void videoSpeedDown() {
-        Log.d(TAG, "videoSpeedDown");
+        DebugLog.d(TAG, "videoSpeedDown");
 
         double speed = this.player.getSpeed() / 2.0;
         if (speed < SPEED_MIN) {
@@ -350,7 +350,7 @@ public class VideoController {
             this.player.setStatus(VideoRunnable.STATUS.PAUSED);
             if (this.videoThread != null && videoThread.isAlive()) {
                 try {
-                    Log.d(TAG, "join");
+                    DebugLog.d(TAG, "join");
                     this.videoThread.join();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -369,10 +369,10 @@ public class VideoController {
      */
     private void touchExpandContract(VideoSurfaceView view, MotionEvent motionEvent) {
         if (motionEvent.getPointerCount() == 1) {
-            Log.d(TAG, "move");
+            DebugLog.d(TAG, "move");
             view.move(motionEvent);
         } else if (motionEvent.getPointerCount() == 2) {
-            Log.d(TAG, "scale");
+            DebugLog.d(TAG, "scale");
             view.setGestureMotionEvent(motionEvent);
         }
     }
@@ -387,13 +387,13 @@ public class VideoController {
         if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
             this.touchStartX = motionEvent.getX();
             this.touchXDiffLevelLast = 0;
-            Log.d(TAG, "Diff Level : " + this.touchXDiffLevelLast);
+            DebugLog.d(TAG, "Diff Level : " + this.touchXDiffLevelLast);
         } else if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
             int diffX = (int) (motionEvent.getX() - this.touchStartX);
-            Log.d(TAG, "diff x : " + diffX);
+            DebugLog.d(TAG, "diff x : " + diffX);
 
             touchXDiffLevel = diffX / TOUCH_X_DIFF_SIZE;
-            Log.d(TAG, "Diff Level : " + this.touchXDiffLevelLast + " => " + touchXDiffLevel);
+            DebugLog.d(TAG, "Diff Level : " + this.touchXDiffLevelLast + " => " + touchXDiffLevel);
             if (this.player != null && player.getStatus() == VideoRunnable.STATUS.PAUSED) {
                 if (this.touchXDiffLevelLast < touchXDiffLevel) {
                     videoForward();
@@ -409,9 +409,9 @@ public class VideoController {
      * videoPause
      */
     private void videoPause() {
-        Log.d(TAG, "videoPause");
+        DebugLog.d(TAG, "videoPause");
         if (this.videoThread.isAlive()) {
-            Log.d(TAG, "interrupt");
+            DebugLog.d(TAG, "interrupt");
             this.videoThread.interrupt();
         }
         this.player.setStatus(VideoRunnable.STATUS.PAUSED);
@@ -424,13 +424,13 @@ public class VideoController {
      * @param progress video progress
      */
     private void videoSeek(int progress) {
-        Log.d(TAG, "videoSeek");
+        DebugLog.d(TAG, "videoSeek");
         if (this.player.getStatus() == VideoRunnable.STATUS.SEEKING) {
             return;
         }
         if (this.videoThread.isAlive()) {
             try {
-                Log.d(TAG, "join");
+                DebugLog.d(TAG, "join");
                 this.videoThread.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -449,19 +449,19 @@ public class VideoController {
      * @param retriever media meta data retriever
      */
     private void logMetaData(MediaMetadataRetriever retriever) {
-        Log.d(TAG, "logMetaData");
+        DebugLog.d(TAG, "logMetaData");
 
-        Log.d(TAG, "==================================================");
-        Log.d(TAG, "has audio  :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_AUDIO));
-        Log.d(TAG, "has video  :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO));
-        Log.d(TAG, "date       :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE));
-        Log.d(TAG, "width      :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
-        Log.d(TAG, "height     :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-        Log.d(TAG, "duration   :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-        Log.d(TAG, "rotation   :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
-        Log.d(TAG, "num tracks :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS));
-        Log.d(TAG, "title      :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-        Log.d(TAG, "==================================================");
+        DebugLog.d(TAG, "==================================================");
+        DebugLog.d(TAG, "has audio  :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_AUDIO));
+        DebugLog.d(TAG, "has video  :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO));
+        DebugLog.d(TAG, "date       :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE));
+        DebugLog.d(TAG, "width      :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+        DebugLog.d(TAG, "height     :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+        DebugLog.d(TAG, "duration   :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+        DebugLog.d(TAG, "rotation   :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION));
+        DebugLog.d(TAG, "num tracks :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS));
+        DebugLog.d(TAG, "title      :" + retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+        DebugLog.d(TAG, "==================================================");
     }
 
 }

@@ -2,10 +2,10 @@ package jp.mydns.dego.slowmovieplayer.VideoPlayer;
 
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 import java.lang.ref.WeakReference;
 
+import jp.mydns.dego.slowmovieplayer.Util.DebugLog;
 import jp.mydns.dego.slowmovieplayer.ViewController;
 
 public class VideoPlayerHandler extends Handler {
@@ -46,7 +46,7 @@ public class VideoPlayerHandler extends Handler {
      */
     VideoPlayerHandler(ViewController viewController) {
         super();
-        Log.d(TAG, "VideoPlayerHandler");
+        DebugLog.d(TAG, "VideoPlayerHandler");
         this.viewControllerRef = new WeakReference<>(viewController);
     }
 
@@ -65,17 +65,17 @@ public class VideoPlayerHandler extends Handler {
      */
     @Override
     public void handleMessage(Message message) {
-        Log.d(TAG, "handleMessage");
+        DebugLog.d(TAG, "handleMessage");
 
         long time_us = message.getData().getLong(MESSAGE_PROGRESS_US);
-        Log.d(TAG, "progress time (us) : " + time_us);
+        DebugLog.d(TAG, "progress time (us) : " + time_us);
         if (time_us >= 0) {
             this.viewControllerRef.get().setProgress((int) (time_us / 1000));
         }
 
         VideoRunnable.STATUS status = (VideoRunnable.STATUS) message.getData().getSerializable(MESSAGE_STATUS);
         if (status != null) {
-            Log.d(TAG, "status : " + status.name() + " (" + status + ")");
+            DebugLog.d(TAG, "status : " + status.name() + " (" + status + ")");
             this.viewControllerRef.get().setVisibility(status);
         }
     }

@@ -4,11 +4,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Point;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.SurfaceView;
+
+import jp.mydns.dego.slowmovieplayer.Util.DebugLog;
 
 public class VideoSurfaceView extends SurfaceView {
 
@@ -57,7 +58,7 @@ public class VideoSurfaceView extends SurfaceView {
      */
     public VideoSurfaceView(Context context) {
         super(context);
-        Log.d(TAG, "VideoSurfaceView");
+        DebugLog.d(TAG, "VideoSurfaceView");
         init(context);
     }
 
@@ -69,7 +70,7 @@ public class VideoSurfaceView extends SurfaceView {
      */
     public VideoSurfaceView(Context context, AttributeSet attributeSet) {
         super(context, attributeSet);
-        Log.d(TAG, "VideoSurfaceView");
+        DebugLog.d(TAG, "VideoSurfaceView");
         init(context);
     }
 
@@ -82,7 +83,7 @@ public class VideoSurfaceView extends SurfaceView {
      */
     public VideoSurfaceView(Context context, AttributeSet attributeSet, int defStyleAttr) {
         super(context, attributeSet, defStyleAttr);
-        Log.d(TAG, "VideoSurfaceView");
+        DebugLog.d(TAG, "VideoSurfaceView");
         init(context);
     }
 
@@ -108,7 +109,7 @@ public class VideoSurfaceView extends SurfaceView {
      */
     public void setGestureMotionEvent(MotionEvent event)
     {
-        Log.d(TAG, "setGestureMotionEvent");
+        DebugLog.d(TAG, "setGestureMotionEvent");
         this.isMove = false;
         this.scaleGestureDetector.onTouchEvent(event);
     }
@@ -154,7 +155,7 @@ public class VideoSurfaceView extends SurfaceView {
     public void layout(int l, int t, int r, int b) {
 
         if (this.canChangeLayout) {
-            Log.d(TAG, "call super.layout(...)");
+            DebugLog.d(TAG, "call super.layout(...)");
             super.layout(l, t, r, b);
         }
     }
@@ -166,7 +167,7 @@ public class VideoSurfaceView extends SurfaceView {
      * @param height height
      */
     void setInitialSize(int width, int height) {
-        Log.d(TAG, "setInitialSize(" + width + ", " + height + ")");
+        DebugLog.d(TAG, "setInitialSize(" + width + ", " + height + ")");
         this.initialWidth = width;
         this.initialHeight = height;
 
@@ -181,7 +182,7 @@ public class VideoSurfaceView extends SurfaceView {
         this.canChangeLayout = true;
         this.layout(left, top, right, bottom);
         this.canChangeLayout = false;
-        Log.d(TAG, "(l, t, r, b) : (" + left + ", " + top + ", " + right + ", " + bottom + ")");
+        DebugLog.d(TAG, "(l, t, r, b) : (" + left + ", " + top + ", " + right + ", " + bottom + ")");
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -194,7 +195,7 @@ public class VideoSurfaceView extends SurfaceView {
      * @param context context
      */
     private void init(Context context) {
-        Log.d(TAG, "init");
+        DebugLog.d(TAG, "init");
         this.scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
@@ -227,7 +228,7 @@ public class VideoSurfaceView extends SurfaceView {
             this.display.getSize(this.displayCenter);
             this.displayCenter.x = this.displayCenter.x / 2;
             this.displayCenter.y = this.displayCenter.y / 2;
-            Log.d(TAG, "display center : (" + this.displayCenter.x + ", " + this.displayCenter.y + ")");
+            DebugLog.d(TAG, "display center : (" + this.displayCenter.x + ", " + this.displayCenter.y + ")");
         } else {
             this.display = null;
         }
@@ -239,7 +240,7 @@ public class VideoSurfaceView extends SurfaceView {
      * @param scale scale
      */
     private void resize(float scale) {
-        Log.d(TAG, "resize");
+        DebugLog.d(TAG, "resize");
         if (this.display == null) {
             return;
         }
@@ -251,17 +252,17 @@ public class VideoSurfaceView extends SurfaceView {
         } else if (this.scale < MINIMUM_SCALE) {
             this.scale = MINIMUM_SCALE;
         }
-        Log.d(TAG, "scale : " + this.scale);
+        DebugLog.d(TAG, "scale : " + this.scale);
 
         int width = (int) ((float) this.initialWidth * this.scale);
         int height = (int) ((float) this.initialHeight * this.scale);
-        Log.d(TAG, "(w, h) : (" + width + ", " + height + ")");
+        DebugLog.d(TAG, "(w, h) : (" + width + ", " + height + ")");
 
         int left = this.displayCenter.x - (width / 2) + this.moveX;
         int top = this.displayCenter.y - (height / 2) + this.moveY;
         int right = this.displayCenter.x + (width / 2) + this.moveX;
         int bottom = this.displayCenter.y + (height / 2) + this.moveY;
-        Log.d(TAG, "(l, t, r, b) : (" + left + ", " + top + ", " + right + ", " + bottom + ")");
+        DebugLog.d(TAG, "(l, t, r, b) : (" + left + ", " + top + ", " + right + ", " + bottom + ")");
 
         limit(left, top, right, bottom);
     }

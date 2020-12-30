@@ -13,10 +13,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import jp.mydns.dego.slowmovieplayer.Util.DebugLog;
 import jp.mydns.dego.slowmovieplayer.VideoPlayer.VideoController;
 
 public class MainActivity extends AppCompatActivity {
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "onActivityResult");
+        DebugLog.d(TAG, "onActivityResult");
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case REQUEST_PERMISSION_READ_EXTERNAL_STORAGE:
@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
 
             default:
-                Log.w(TAG, "unknown request code");
+                DebugLog.w(TAG, "unknown request code");
                 break;
         }
     }
@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
      * @param view button view
      */
     public void onVideoSelectButtonClicked(View view) {
-        Log.d(TAG, "onVideoSelectButtonClicked");
+        DebugLog.d(TAG, "onVideoSelectButtonClicked");
         if (this.canReadExternalStorage) {
             Intent intentGallery;
             intentGallery = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
      * @param view button view
      */
     public void onPlayButtonClicked(View view) {
-        Log.d(TAG, "onPlayButtonClicked");
+        DebugLog.d(TAG, "onPlayButtonClicked");
         this.videoController.videoPlay();
     }
 
@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
      * @param view button view
      */
     public void onStopButtonClicked(View view) {
-        Log.d(TAG, "onStopButtonClicked");
+        DebugLog.d(TAG, "onStopButtonClicked");
         this.videoController.videoStop();
     }
 
@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
      * @param view button view
      */
     public void onForwardButtonClicked(View view) {
-        Log.d(TAG, "onForwardButtonClicked");
+        DebugLog.d(TAG, "onForwardButtonClicked");
         this.videoController.videoForward();
     }
 
@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
      * @param view button view
      */
     public void onBackwardButtonClicked(View view) {
-        Log.d(TAG, "onBackwardButtonClicked");
+        DebugLog.d(TAG, "onBackwardButtonClicked");
         this.videoController.videoBackward();
     }
 
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
      * @param view button view
      */
     public void onSpeedUpButtonClicked(View view) {
-        Log.d(TAG, "onSpeedUpButtonClicked");
+        DebugLog.d(TAG, "onSpeedUpButtonClicked");
         this.videoController.videoSpeedUp();
     }
 
@@ -179,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
      * @param view button view
      */
     public void onSpeedDownButtonClicked(View view) {
-        Log.d(TAG, "onSpeedDownButtonClicked");
+        DebugLog.d(TAG, "onSpeedDownButtonClicked");
         this.videoController.videoSpeedDown();
     }
 
@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
      * @param view button view
      */
     public void onExpandButtonClicked(View view) {
-        Log.d(TAG, "onExpandButtonClicked");
+        DebugLog.d(TAG, "onExpandButtonClicked");
         this.videoController.setManipulation(VideoController.MANIPULATION.EXPAND_CONTRACT);
     }
 
@@ -199,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
      * @param view button view
      */
     public void onFrameControlButtonClicked(View view) {
-        Log.d(TAG, "onFrameControlButtonClicked");
+        DebugLog.d(TAG, "onFrameControlButtonClicked");
         this.videoController.setManipulation(VideoController.MANIPULATION.FRAME_CONTROL);
     }
 
@@ -213,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
      * @param resultCode intent request code
      */
     private void requestPermission(int resultCode) {
-        Log.d(TAG, "requestPermission");
+        DebugLog.d(TAG, "requestPermission");
         if (resultCode != Activity.RESULT_OK) {
             return;
         }
@@ -238,14 +238,14 @@ public class MainActivity extends AppCompatActivity {
      * @param data       intent received data
      */
     private void requestGalleryResult(int resultCode, Intent data) {
-        Log.d(TAG, "requestGalleryResult");
+        DebugLog.d(TAG, "requestGalleryResult");
         if (resultCode == Activity.RESULT_OK) {
             String video_path = getPathFromUri(data);
             if (video_path == null || "".equals(video_path)) {
                 Toast.makeText(getApplication(), getString(R.string.toast_no_video), Toast.LENGTH_SHORT).show();
             } else {
                 this.videoController.setVideoPath(video_path);
-                Log.d(TAG, "video path :" + video_path);
+                DebugLog.d(TAG, "video path :" + video_path);
             }
         }
     }
@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
      * initialize
      */
     private void initialize() {
-        Log.d(TAG, "initialize");
+        DebugLog.d(TAG, "initialize");
         this.videoController = new VideoController(this);
         this.canReadExternalStorage = false;
     }
@@ -285,9 +285,9 @@ public class MainActivity extends AppCompatActivity {
      * @return path
      */
     private String getPathFromUri(Intent data) {
-        Log.d(TAG, "getPathFromUri");
+        DebugLog.d(TAG, "getPathFromUri");
         if (!this.canReadExternalStorage) {
-            Log.e(TAG, "can not read external storage");
+            DebugLog.e(TAG, "can not read external storage");
             return null;
         }
 

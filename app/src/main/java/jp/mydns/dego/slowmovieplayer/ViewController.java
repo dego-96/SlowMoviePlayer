@@ -5,7 +5,6 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.graphics.Point;
-import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.widget.ImageView;
@@ -19,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import jp.mydns.dego.slowmovieplayer.Util.DebugLog;
 import jp.mydns.dego.slowmovieplayer.VideoPlayer.VideoController;
 import jp.mydns.dego.slowmovieplayer.VideoPlayer.VideoRunnable;
 
@@ -81,7 +81,7 @@ public class ViewController {
      * @param activity main activity
      */
     public ViewController(Activity activity) {
-        Log.d(TAG, "ViewController");
+        DebugLog.d(TAG, "ViewController");
 
         this.activity = activity;
 
@@ -130,7 +130,7 @@ public class ViewController {
      */
     @SuppressWarnings("noinspection")
     public void setSurfaceViewSize(int videoWidth, int videoHeight, int rotation) {
-        Log.d(TAG, "setSurfaceViewSize");
+        DebugLog.d(TAG, "setSurfaceViewSize");
 
         Point point = new Point();
         Display display = this.activity.getWindowManager().getDefaultDisplay();
@@ -172,7 +172,7 @@ public class ViewController {
      * @param aStatus video status
      */
     public void setVisibility(VideoRunnable.STATUS aStatus) {
-        Log.d(TAG, "setVisibility( " + aStatus.name() + " )");
+        DebugLog.d(TAG, "setVisibility( " + aStatus.name() + " )");
         switch (aStatus) {
             case INIT:
                 this.surfaceView.setVisibility(View.GONE);
@@ -243,7 +243,7 @@ public class ViewController {
      * @param progress progress
      */
     public void setProgress(int progress) {
-        Log.d(TAG, "setProgress (" + progress + ")");
+        DebugLog.d(TAG, "setProgress (" + progress + ")");
         this.seekBar.setProgress(progress);
 
         this.currentTimeTextView.setText(TimerFormat.format(new Date(progress)));
@@ -261,7 +261,7 @@ public class ViewController {
      * @param aDuration video duration
      */
     public void setDuration(int aDuration) {
-        Log.d(TAG, "setDuration (" + aDuration + ")");
+        DebugLog.d(TAG, "setDuration (" + aDuration + ")");
         this.seekBar.setMax(aDuration);
 
         this.remainTimeTextView.setText(TimerFormat.format(new Date(aDuration)));
@@ -273,7 +273,7 @@ public class ViewController {
      * @param speed play speed
      */
     public void setPlaySpeedText(double speed) {
-        Log.d(TAG, "setPlaySpeed");
+        DebugLog.d(TAG, "setPlaySpeed");
 
         if (3.0 < speed) {
             this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x4_0));
@@ -307,7 +307,7 @@ public class ViewController {
      * animFullscreenPreview
      */
     public void animFullscreenPreview() {
-        Log.d(TAG, "fullScreenAnimationStart");
+        DebugLog.d(TAG, "fullScreenAnimationStart");
 
         float toX, fromX, toY, fromY;
         List<Animator> animatorList = new ArrayList<>();
