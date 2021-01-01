@@ -25,13 +25,17 @@ public class VideoController {
         FRAME_CONTROL
     }
 
+    public static final double[] VIDEO_SPEED = {
+        0.125, 0.25, 0.5, 1.0
+    };
+
     // ---------------------------------------------------------------------------------------------
     // private constant values
     // ---------------------------------------------------------------------------------------------
     private static final String TAG = "VideoController";
     private static final int TOUCH_X_DIFF_SIZE = 50;
-    private static final double SPEED_MAX = 4.0;
-    private static final double SPEED_MIN = 1.0 / 4.0;
+    private static final int SPEED_LEVEL_MAX = VIDEO_SPEED.length - 1;
+    private static final int SPEED_LEVEL_MIN = 0;
 
     // ---------------------------------------------------------------------------------------------
     // private fields
@@ -44,6 +48,7 @@ public class VideoController {
     private float touchStartX;
     private int touchXDiffLevelLast;
     private MANIPULATION manipulation;
+    private int speedLevel;
 
     // ---------------------------------------------------------------------------------------------
     // static fields
@@ -63,12 +68,13 @@ public class VideoController {
     public VideoController(final Activity activity) {
         DebugLog.d(TAG, "VideoController");
         this.viewController = new ViewController(activity);
-        this.viewController.setVisibility(VideoRunnable.STATUS.INIT);
+        this.viewController.setVisibility(VideoRunnable.STATUS.INIT, this.speedLevel);
         this.player = VideoRunnable.getInstance();
         this.player.setVideoHandler(new VideoPlayerHandler(this.viewController));
 
         this.touchDownTime = 0;
         this.manipulation = MANIPULATION.EXPAND_CONTRACT;
+        this.speedLevel = SPEED_LEVEL_MAX;  // x1.0
         this.viewController.setManipulation(this.manipulation);
 
         this.player.setOnVideoStatusChangeListener(new OnVideoStatusChangeListener() {
@@ -172,7 +178,7 @@ public class VideoController {
      */
     public void setVideoPath(String path) {
         this.filePath = path;
-        this.viewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
+        this.viewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED, this.speedLevel);
     }
 
     /**
@@ -183,7 +189,7 @@ public class VideoController {
         if (this.player.getStatus() == VideoRunnable.STATUS.PAUSED) {
             // pause => play
             if (this.videoThread == null || !this.videoThread.isAlive()) {
-                this.viewController.setVisibility(VideoRunnable.STATUS.PLAYING);
+                this.viewController.setVisibility(VideoRunnable.STATUS.PLAYING, this.speedLevel);
                 this.videoThread = new Thread(this.player);
                 this.videoThread.start();
             }
@@ -193,7 +199,7 @@ public class VideoController {
         } else if (this.player.getStatus() == VideoRunnable.STATUS.VIDEO_END) {
             this.player.release();
             this.player.prepare(this.filePath);
-            this.viewController.setVisibility(VideoRunnable.STATUS.PLAYING);
+            this.viewController.setVisibility(VideoRunnable.STATUS.PLAYING, this.speedLevel);
             this.videoThread = new Thread(this.player);
             this.videoThread.start();
         }
@@ -216,7 +222,7 @@ public class VideoController {
         this.player.release();
         this.player.prepare(this.filePath);
         this.player.setStatus(VideoRunnable.STATUS.VIDEO_SELECTED);
-        this.viewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
+        this.viewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED, this.speedLevel);
         this.videoThread = new Thread(this.player);
         this.videoThread.start();
     }
@@ -231,7 +237,7 @@ public class VideoController {
         }
         if (this.player.getStatus() == VideoRunnable.STATUS.PAUSED) {
             this.player.setStatus(VideoRunnable.STATUS.FORWARD);
-            this.viewController.setVisibility(VideoRunnable.STATUS.FORWARD);
+            this.viewController.setVisibility(VideoRunnable.STATUS.FORWARD, this.speedLevel);
             this.videoThread = new Thread(this.player);
             this.videoThread.start();
         }
@@ -248,7 +254,7 @@ public class VideoController {
         }
         this.player.toPreviousKeyFrame();
         this.player.setStatus(VideoRunnable.STATUS.BACKWARD);
-        this.viewController.setVisibility(VideoRunnable.STATUS.BACKWARD);
+        this.viewController.setVisibility(VideoRunnable.STATUS.BACKWARD, this.speedLevel);
         this.videoThread = new Thread(this.player);
         this.videoThread.start();
     }
@@ -259,13 +265,13 @@ public class VideoController {
     public void videoSpeedUp() {
         DebugLog.d(TAG, "videoSpeedUp");
 
-        double speed = this.player.getSpeed() * 2.0;
-        if (speed > SPEED_MAX) {
-            speed = SPEED_MAX;
+        this.speedLevel++;
+        if (this.speedLevel > SPEED_LEVEL_MAX) {
+            this.speedLevel = SPEED_LEVEL_MAX;
         }
 
-        this.viewController.setPlaySpeedText(speed);
-        this.player.setSpeed(speed);
+        this.viewController.setPlaySpeedText(this.speedLevel);
+        this.player.setSpeed(VIDEO_SPEED[this.speedLevel]);
     }
 
     /**
@@ -274,13 +280,13 @@ public class VideoController {
     public void videoSpeedDown() {
         DebugLog.d(TAG, "videoSpeedDown");
 
-        double speed = this.player.getSpeed() / 2.0;
-        if (speed < SPEED_MIN) {
-            speed = SPEED_MIN;
+        this.speedLevel--;
+        if (this.speedLevel < SPEED_LEVEL_MIN) {
+            this.speedLevel = SPEED_LEVEL_MIN;
         }
 
-        this.viewController.setPlaySpeedText(speed);
-        this.player.setSpeed(speed);
+        this.viewController.setPlaySpeedText(this.speedLevel);
+        this.player.setSpeed(VIDEO_SPEED[this.speedLevel]);
     }
 
     /**
@@ -335,7 +341,7 @@ public class VideoController {
                 this.player.getStatus() == VideoRunnable.STATUS.VIDEO_SELECTED) {
                 this.player.init(this.filePath, holder.getSurface());
                 this.viewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
-                this.viewController.setPlaySpeedText(this.player.getSpeed());
+                this.viewController.setPlaySpeedText(this.speedLevel);
                 this.videoThread = new Thread(this.player);
                 this.videoThread.start();
             }
@@ -415,7 +421,7 @@ public class VideoController {
             this.videoThread.interrupt();
         }
         this.player.setStatus(VideoRunnable.STATUS.PAUSED);
-        this.viewController.setVisibility(VideoRunnable.STATUS.PAUSED);
+        this.viewController.setVisibility(VideoRunnable.STATUS.PAUSED, this.speedLevel);
     }
 
     /**
@@ -438,7 +444,7 @@ public class VideoController {
         }
         this.player.seekTo(progress);
         this.player.setStatus(VideoRunnable.STATUS.SEEKING);
-        this.viewController.setVisibility(VideoRunnable.STATUS.SEEKING);
+        this.viewController.setVisibility(VideoRunnable.STATUS.SEEKING, this.speedLevel);
         this.videoThread = new Thread(this.player);
         this.videoThread.start();
     }

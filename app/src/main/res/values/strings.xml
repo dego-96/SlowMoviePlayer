@@ -21,8 +21,7 @@
     <string name="toast_no_video">動画を取得できませんでした。</string>
 
     <!-- Playback Speed -->
+    <string name="play_speed_x1_8">x1/8</string>
     <string name="play_speed_x1_4">x1/4</string>
     <string name="play_speed_x1_2">x1/2</string>
-    <string name="play_speed_x2_0">x2.0</string>
-    <string name="play_speed_x4_0">x4.0</string>
 </resources>

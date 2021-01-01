@@ -216,7 +216,7 @@ public class VideoRunnable implements Runnable {
         this.prepare(filePath);
 
         this.setStatus(STATUS.VIDEO_SELECTED);
-        this.playSpeed = 1.0;
+        this.playSpeed = VideoController.VIDEO_SPEED[VideoController.VIDEO_SPEED.length - 1];
     }
 
     /**
@@ -326,15 +326,6 @@ public class VideoRunnable implements Runnable {
         this.decoder.stop();
         this.decoder.release();
         this.extractor.release();
-    }
-
-    /**
-     * getSpeed
-     *
-     * @return play speed
-     */
-    double getSpeed() {
-        return this.playSpeed;
     }
 
     /**

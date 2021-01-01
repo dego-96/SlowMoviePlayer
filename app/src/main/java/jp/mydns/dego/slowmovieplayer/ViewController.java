@@ -238,6 +238,26 @@ public class ViewController {
     }
 
     /**
+     * setVisibility
+     *
+     * @param aStatus video status
+     */
+    public void setVisibility(VideoRunnable.STATUS aStatus, int speedLevel) {
+        this.setVisibility(aStatus);
+
+        if (speedLevel >= (VideoController.VIDEO_SPEED.length - 1)) {
+            this.speedUpImageView.setVisibility(View.INVISIBLE);
+            this.speedDownImageView.setVisibility(View.VISIBLE);
+        } else if (speedLevel == 0) {
+            this.speedUpImageView.setVisibility(View.VISIBLE);
+            this.speedDownImageView.setVisibility(View.INVISIBLE);
+        } else {
+            this.speedUpImageView.setVisibility(View.VISIBLE);
+            this.speedDownImageView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
      * setProgress
      *
      * @param progress progress
@@ -270,21 +290,32 @@ public class ViewController {
     /**
      * setPlaySpeed
      *
-     * @param speed play speed
+     * @param speedLevel play speed
      */
-    public void setPlaySpeedText(double speed) {
+    public void setPlaySpeedText(int speedLevel) {
         DebugLog.d(TAG, "setPlaySpeed");
 
-        if (3.0 < speed) {
-            this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x4_0));
-        } else if (1.5 < speed) {
-            this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x2_0));
-        } else if (0.8 < speed) {
-            this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_init));
-        } else if (0.4 < speed) {
-            this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x1_2));
-        } else {
-            this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x1_4));
+        switch (speedLevel) {
+            case 0:
+                this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x1_8));
+                this.speedDownImageView.setVisibility(View.INVISIBLE);
+                this.speedUpImageView.setVisibility(View.VISIBLE);
+                break;
+            case 1:
+                this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x1_4));
+                this.speedDownImageView.setVisibility(View.VISIBLE);
+                this.speedUpImageView.setVisibility(View.VISIBLE);
+                break;
+            case 2:
+                this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_x1_2));
+                this.speedDownImageView.setVisibility(View.VISIBLE);
+                this.speedUpImageView.setVisibility(View.VISIBLE);
+                break;
+            default:
+                this.playSpeedTextView.setText(this.activity.getString(R.string.play_speed_init));
+                this.speedDownImageView.setVisibility(View.VISIBLE);
+                this.speedUpImageView.setVisibility(View.INVISIBLE);
+                break;
         }
     }
 
