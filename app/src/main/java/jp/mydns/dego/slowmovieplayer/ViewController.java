@@ -245,6 +245,7 @@ public class ViewController {
     public void setVisibility(VideoRunnable.STATUS aStatus, int speedLevel) {
         this.setVisibility(aStatus);
 
+        DebugLog.d(TAG, "speed level : " + speedLevel);
         if (speedLevel >= (VideoController.VIDEO_SPEED.length - 1)) {
             this.speedUpImageView.setVisibility(View.INVISIBLE);
             this.speedDownImageView.setVisibility(View.VISIBLE);

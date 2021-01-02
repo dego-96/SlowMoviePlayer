@@ -68,7 +68,7 @@ public class VideoController {
     public VideoController(final Activity activity) {
         DebugLog.d(TAG, "VideoController");
         this.viewController = new ViewController(activity);
-        this.viewController.setVisibility(VideoRunnable.STATUS.INIT, this.speedLevel);
+        this.viewController.setVisibility(VideoRunnable.STATUS.INIT);
         this.player = VideoRunnable.getInstance();
         this.player.setVideoHandler(new VideoPlayerHandler(this.viewController));
 
@@ -340,7 +340,8 @@ public class VideoController {
             if (this.player.getStatus() == VideoRunnable.STATUS.INIT ||
                 this.player.getStatus() == VideoRunnable.STATUS.VIDEO_SELECTED) {
                 this.player.init(this.filePath, holder.getSurface());
-                this.viewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED);
+                this.speedLevel = SPEED_LEVEL_MAX;
+                this.viewController.setVisibility(VideoRunnable.STATUS.VIDEO_SELECTED, this.speedLevel);
                 this.viewController.setPlaySpeedText(this.speedLevel);
                 this.videoThread = new Thread(this.player);
                 this.videoThread.start();
