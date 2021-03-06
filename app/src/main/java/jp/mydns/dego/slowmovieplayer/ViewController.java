@@ -137,12 +137,14 @@ public class ViewController {
         display.getSize(point);
         int displayWidth = point.x;
         int displayHeight = point.y;
+        boolean isLandscape = ((rotation / 90) % 2 == 0);
+        float videoAspect = isLandscape ? (float) videoWidth / (float) videoHeight : (float) videoHeight / (float) videoWidth;
+        float displayAspect = (float) displayWidth / (float) displayHeight;
 
         int width;
         int height;
-        if ((rotation % 180) == 0) {
-            // 横画面映像
-            if (((float) displayWidth / (float) displayHeight) > ((float) videoWidth / (float) videoHeight)) {
+        if (isLandscape) {  // 横画面映像
+            if (displayAspect > videoAspect) {
                 // 画面より縦長
                 width = (int) ((float) videoWidth * ((float) displayHeight / (float) videoHeight));
                 height = displayHeight;
@@ -153,7 +155,7 @@ public class ViewController {
             }
         } else {
             // 縦画面映像
-            if (((float) displayWidth / (float) displayHeight) > ((float) videoHeight / (float) videoWidth)) {
+            if (displayAspect > videoAspect) {
                 // 画面より縦長
                 width = (int) ((float) videoHeight * ((float) displayHeight / (float) videoWidth));
                 height = displayHeight;
